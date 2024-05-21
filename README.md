@@ -1,5 +1,7 @@
 # trade-tariff-fpo-dev-hub-e2e
 
+> Remember to install pre-commit hooks before making any changes to the repository.
+
 Playwright suite used to validate the end to end functionality of the FPO dev hub
 
 The hub service allows users to authenticate using their SCP logins and create
