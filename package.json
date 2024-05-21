@@ -1,0 +1,16 @@
+{
+  "name": "trade-tariff-fpo-dev-hub-e2e",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:trade-tariff/trade-tariff-fpo-dev-hub-e2e.git",
+  "author": "William Fish <william.michael.fish@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "1.38.0",
+    "@types/node": "^20.12.12"
+  },
+  "scripts": {},
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  }
+}
