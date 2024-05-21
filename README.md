@@ -15,28 +15,28 @@ sequenceDiagram
     participant User
     participant Playwright
     participant SCP as SCP (SSO Provider)
-    participant Frontend
+    participant Hub Frontend
     participant Cognito as Cognito (M2M)
-    participant Backend
+    participant Hub Backend
     participant DynamoDB
     participant APIGateway as API Gateway
 
     User->>Playwright: Initiate test
     Playwright->>SCP: Authenticate with OpenID
     SCP-->>Playwright: Token
-    Playwright->>Frontend: Access with token
-    Frontend->>Cognito: Authenticate with client credentials
-    Cognito-->>Frontend: Access token
-    Frontend->>Playwright: Display dashboard
-    Playwright->>Frontend: Create API Gateway API Key credentials
-    Frontend->>APIGateway: Generate API Key
-    APIGateway-->>Frontend: API Key
-    Frontend-->>Playwright: Return API Key
+    Playwright->>Hub Frontend: Access with token
+    Hub Frontend->>Cognito: Authenticate with client credentials
+    Cognito-->>Hub Frontend: Access token
+    Hub Frontend->>Playwright: Display dashboard
+    Playwright->>Hub Frontend: Create API Gateway API Key credentials
+    Hub Frontend->>APIGateway: Generate API Key
+    APIGateway-->>Hub Frontend: API Key
+    Hub Frontend-->>Playwright: Return API Key
     Playwright->>APIGateway: Perform Commodity Code Identification with API Key
-    APIGateway->>Backend: Forward request with API Key
-    Backend->>DynamoDB: Query data
-    DynamoDB-->>Backend: Return data
-    Backend-->>APIGateway: Return data
+    APIGateway->>Hub Backend: Forward request with API Key
+    Hub Backend->>DynamoDB: Query data
+    DynamoDB-->>Hub Backend: Return data
+    Hub Backend-->>APIGateway: Return data
     APIGateway-->>Playwright: Return data
     Playwright-->>User: Test results
 ```
