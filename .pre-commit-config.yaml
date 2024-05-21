@@ -8,13 +8,6 @@ repos:
       - id: check-yaml
       - id: check-merge-conflict
 
-  - repo: https://github.com/zahorniak/pre-commit-circleci.git
-    rev: v0.6
-    hooks:
-      - id: circleci_validate
-        args:
-          - --org-id=da607531-93bb-4321-90ed-08710434ce1c
-
   - repo: https://github.com/rhysd/actionlint.git
     rev: v1.7.0
     hooks:
