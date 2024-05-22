@@ -1,9 +1,18 @@
-import { test, expect } from '@playwright/test';
+import { DashboardPage } from './pages/dashboardPage'
+import { SignInPage } from './pages/signInPage'
+import { ApiClient } from './utils/apiClient'
 
-const url = process.env.URL ?? 'https://hub.dev.trade-tariff.service.gov.uk/';
+import { test } from '@playwright/test'
 
 test('creating a customer api key', async ({ page }) => {
-  await page.goto(url);
+  const signInPage = new SignInPage(page)
+  const dashboardPage = new DashboardPage(page)
 
-  await expect(page).toHaveTitle(/GOV.UK - The best place to find government services and information/);
-});
+  await signInPage.signIn('foo', 'bar')
+  await dashboardPage.createKey('test')
+
+  const apiClient = new ApiClient(dashboardPage.getKey('test'))
+  await apiClient.doClassification('haddock')
+  await apiClient.assertSuccessful()
+  await apiClient.assertClassification('732690')
+})

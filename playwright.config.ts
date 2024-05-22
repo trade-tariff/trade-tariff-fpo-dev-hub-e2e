@@ -1,21 +1,23 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test'
+import dotenv from 'dotenv'
 
-require('dotenv').config();
+dotenv.config()
 
 // See https://playwright.dev/docs/test-configuration.
+const onCI = (process.env.CI ?? 'false') === 'true'
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  forbidOnly: onCI,
+  retries: onCI ? 2 : 0,
+  workers: onCI ? 1 : undefined,
   reporter: 'html',
-  use: { trace: 'on-first-retry' },
+  use: { trace: 'on' },
 
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-  ],
-});
+      use: { ...devices['Desktop Chrome'] }
+    }
+  ]
+})
