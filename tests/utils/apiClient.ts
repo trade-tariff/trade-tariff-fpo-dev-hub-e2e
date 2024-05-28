@@ -1,5 +1,17 @@
 import { expect } from '@playwright/test'
 
+export interface Classifiable {
+  description: string
+  expectFailure?: boolean
+}
+
+interface HandleResponseOptions {
+  requestOptions: RequestInit
+  expectFailure: boolean
+  retries?: number
+  sleepForMillis?: number
+}
+
 export class ApiClient {
   private static readonly URL = process.env.API_URL ?? 'https://search.dev.trade-tariff.service.gov.uk/fpo-code-search'
   private readonly apiKey: string | null
@@ -12,8 +24,13 @@ export class ApiClient {
     this.json = null
   }
 
-  async doClassification (description: string, expectFailure: boolean = false): Promise<void> {
-    const res = await this.handleResponse(this.createPostRequestOptions(description), expectFailure)
+  async doClassification (opts: Classifiable): Promise<void> {
+    const handleOpts: HandleResponseOptions = {
+      requestOptions: this.createPostRequestOptions(opts.description),
+      expectFailure: opts.expectFailure ?? false
+    }
+
+    const res = await this.handleResponse(handleOpts)
 
     this.status = res?.status ?? null
     this.json = await res?.json()
@@ -27,23 +44,18 @@ export class ApiClient {
     expect(this.status).not.toBe(200)
   }
 
-  async handleResponse (
-    requestOptions: RequestInit,
-    expectFailure: boolean,
-    retries: number = 10,
-    sleepForMillis: number = 100
-  ): Promise<Response | null> {
+  async handleResponse (opts: HandleResponseOptions): Promise<Response | null> {
+    const { retries = 10, sleepForMillis = 100 } = opts
+
     let currentRetry = 0
     let res: Response | null = null
 
     for (let i = 0; i < retries; i++) {
-      res = await fetch(ApiClient.URL, requestOptions)
+      res = await fetch(ApiClient.URL, opts.requestOptions)
 
-      if (expectFailure) {
-        console.log(`Expecting failure, got ${res.status}`)
+      if (opts.expectFailure) {
         if (res.status !== 200) break
       } else {
-        console.log(`Expecting success, got ${res.status}`)
         if (res.status === 200) break
       }
 
@@ -72,15 +84,5 @@ export class ApiClient {
       },
       body
     }
-  }
-
-  private printForNodeCli (responseOptions: any, url: any): void {
-    console.log(`
-const url = '${url}';
-const requestOptions = ${JSON.stringify(responseOptions, null, 2)};
-const res = await fetch(url, requestOptions);
-console.log('Response status:', res.status);
-console.log('Response body:', await res.json());
-`)
   }
 }

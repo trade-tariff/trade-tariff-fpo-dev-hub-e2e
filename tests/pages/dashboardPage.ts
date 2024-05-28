@@ -24,13 +24,11 @@ export class DashboardPage {
     await this.storeKey(description)
 
     await this.backToDashboardLink().click()
-
     this.assertDashboardPage()
   }
 
   async revokeKey (description: string): Promise<void> {
-    const button = await this.revokeButton(description)
-    await button.click()
+    await this.revokeKeyLink(description).click()
 
     this.assertRevokeKeyPage()
 
@@ -41,15 +39,34 @@ export class DashboardPage {
     await this.assertRevoked(description)
   }
 
+  async deleteKey (description: string): Promise<void> {
+    await this.deleteKeyLink(description).click()
+
+    this.assertDeleteKeyPage()
+
+    await this.deleteKeyButton().click()
+
+    this.assertDashboardPage()
+
+    await this.assertDeleted(description)
+  }
+
   async assertRevoked (description: string): Promise<void> {
     const statusCell = this.revokedKeyStatus(description)
 
     await expect(statusCell).toHaveText(this.revokedDate())
   }
 
+  async assertDeleted (description: string): Promise<void> {
+    const keyRow = this.keyRow(description)
+
+    await expect(keyRow).not.toBeVisible()
+  }
+
   assertDashboardPage (): void {
+    const expectedUrl = '/dashboard/local-development'
     // TODO: This should not have local-development in the URL
-    expect(this.page.url()).toContain('/dashboard/local-development')
+    expect(this.page.url()).toContain(expectedUrl)
   }
 
   assertNewKeyPage (): void {
@@ -60,6 +77,11 @@ export class DashboardPage {
   assertRevokeKeyPage (): void {
     // TODO: This should not have local-development in the URL
     expect(this.page.url()).toMatch(/\/dashboard\/keys\/local-development\/[A-Z0-9]{20}\/revoke/)
+  }
+
+  assertDeleteKeyPage (): void {
+    // TODO: This should not have local-development in the URL
+    expect(this.page.url()).toMatch(/\/dashboard\/keys\/local-development\/[A-Z0-9]{20}\/delete/)
   }
 
   assertCreatePage (): void {
@@ -100,15 +122,26 @@ export class DashboardPage {
     return this.page.locator('code.govuk-code')
   }
 
-  private async revokeButton (description: string): Promise<Locator> {
+  private revokeKeyLink (description: string): Locator {
     const rowLocator = this.keyRow(description)
-    const cellLocator = rowLocator.locator('a:has-text("Revoke")')
+    const rowLinkLocator = rowLocator.locator('a:has-text("Revoke")')
 
-    return cellLocator
+    return rowLinkLocator
+  }
+
+  private deleteKeyLink (description: string): Locator {
+    const rowLocator = this.keyRow(description)
+    const rowLinkLocator = rowLocator.locator('a:has-text("Delete")')
+
+    return rowLinkLocator
   }
 
   private revokeKeyButton (): Locator {
     return this.page.getByRole('button', { name: 'Revoke' })
+  }
+
+  private deleteKeyButton (): Locator {
+    return this.page.getByRole('button', { name: 'Delete' })
   }
 
   private revokedKeyStatus (description: string): Locator {
