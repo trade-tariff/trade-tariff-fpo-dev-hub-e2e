@@ -1,28 +1,58 @@
-import { type Page } from '@playwright/test'
+import { type Page, type Locator, expect } from '@playwright/test'
 
 export class SignInPage {
+  static readonly STARTING_URL = process.env.URL ?? 'https://hub.dev.trade-tariff.service.gov.uk'
   private readonly page: Page
-  private static readonly URL = process.env.URL ?? 'https://hub.dev.trade-tariff.service.gov.uk'
+  private static readonly USER_ID = process.env.SCP_USERNAME ?? ''
+  private static readonly PASSWORD = process.env.SCP_PASSWORD ?? ''
 
   constructor (page: Page) {
     this.page = page
   }
 
-  async signIn (username: string, password: string): Promise<Page> {
-    await this.page.goto(SignInPage.URL)
-    await this.page.click('text=Start Now')
-    await this.page.fill('input[name="username"]', username)
-    await this.page.fill('input[name="password"]', password)
-    await this.page.click('text=Sign In')
-    await this.page.waitForNavigation()
+  async signIn (): Promise<Page> {
+    await this.page.goto(SignInPage.STARTING_URL)
+    await this.startNowButton().click()
+
+    this.assertOnSignInPage()
+
+    await this.userIdInput().fill(SignInPage.USER_ID)
+    await this.passwordInput().fill(SignInPage.PASSWORD)
+    await this.signInButton().click()
+
+    await this.page.waitForURL('**/dashboard/local-development')
 
     return this.page
   }
 
   async signOut (): Promise<Page> {
-    await this.page.click('text=Sign out')
-    await this.page.waitForNavigation()
+    await this.signOutButton().click()
+    await this.page.waitForURL('**/logout')
 
     return this.page
+  }
+
+  private assertOnSignInPage (): void {
+    expect(this.page.url()).toContain('/login/signin/creds')
+  }
+
+  private userIdInput (): Locator {
+    return this.page.locator('input[name="user_id"]')
+  }
+
+  private passwordInput (): Locator {
+    return this.page.locator('input[name="password"]')
+  }
+
+  private startNowButton (): Locator {
+    return this.page.getByRole('button', { name: 'Start now' })
+  }
+
+  private signInButton (): Locator {
+    return this.page.getByRole('button', { name: 'Sign in' })
+  }
+
+  private signOutButton (): Locator {
+    return this.page.getByRole('button', { name: 'Sign out' })
   }
 }

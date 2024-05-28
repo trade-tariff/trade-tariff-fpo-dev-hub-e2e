@@ -10,28 +10,68 @@ export class DashboardPage {
   }
 
   async createKey (description: string): Promise<void> {
-    expect(this.page.url()).toContain('/dashboard/testing')
+    this.assertDashboardPage()
 
     await this.createKeyButton().click()
 
-    expect(this.page.url()).toContain('/dashboard/keys/testing/new')
+    this.assertNewKeyPage()
 
-    await this.createKeyInput().fill(description)
+    await this.createKeyDescriptionInput().fill(description)
     await this.createKeySubmitButton().click()
-    await this.page.waitForResponse(response => response.status() === 201)
 
-    const key = await this.page.innerText('text=API Key')
+    this.assertCreatePage()
 
-    this.setKey(description, key)
+    await this.storeKey(description)
+
+    await this.backToDashboardLink().click()
+
+    this.assertDashboardPage()
   }
 
   async revokeKey (description: string): Promise<void> {
-    await this.page.click(`text=Revoke Key for ${description}`)
-    await this.page.waitForResponse(response => response.status() === 200)
+    const button = await this.revokeButton(description)
+    await button.click()
+
+    this.assertRevokeKeyPage()
+
+    await this.revokeKeyButton().click()
+
+    this.assertDashboardPage()
+
+    await this.assertRevoked(description)
   }
 
-  async assertRevoked (_description: string): Promise<void> {
-    expect(true).toBe(true)
+  async assertRevoked (description: string): Promise<void> {
+    const statusCell = this.revokedKeyStatus(description)
+
+    await expect(statusCell).toHaveText(this.revokedDate())
+  }
+
+  assertDashboardPage (): void {
+    // TODO: This should not have local-development in the URL
+    expect(this.page.url()).toContain('/dashboard/local-development')
+  }
+
+  assertNewKeyPage (): void {
+    // TODO: This should not have local-development in the URL
+    expect(this.page.url()).toContain('/dashboard/keys/local-development/new')
+  }
+
+  assertRevokeKeyPage (): void {
+    // TODO: This should not have local-development in the URL
+    expect(this.page.url()).toMatch(/\/dashboard\/keys\/local-development\/[A-Z0-9]{20}\/revoke/)
+  }
+
+  assertCreatePage (): void {
+    // TODO: This should not have local-development in the URL
+    expect(this.page.url()).toContain('/dashboard/keys/local-development/create')
+  }
+
+  async storeKey (description: string): Promise<void> {
+    let key = await this.createdApiKey().innerText()
+    key = key.trim()
+
+    this.setKey(description, key)
   }
 
   getKey (description: string): string | null {
@@ -45,14 +85,53 @@ export class DashboardPage {
   }
 
   private createKeyButton (): Locator {
-    return this.page.getByRole('button', { name: 'Create Key' })
+    return this.page.getByRole('link', { name: 'Create New Key' })
   }
 
-  private createKeyInput (): Locator {
-    return this.page.getByRole('textbox', { name: 'apiKeyDescription' })
+  private createKeyDescriptionInput (): Locator {
+    return this.page.getByLabel('Enter the description for your API key.')
   }
 
   private createKeySubmitButton (): Locator {
-    return this.page.getByRole('button', { name: 'Submit' })
+    return this.page.getByRole('button')
+  }
+
+  private createdApiKey (): Locator {
+    return this.page.locator('code.govuk-code')
+  }
+
+  private async revokeButton (description: string): Promise<Locator> {
+    const rowLocator = this.keyRow(description)
+    const cellLocator = rowLocator.locator('a:has-text("Revoke")')
+
+    return cellLocator
+  }
+
+  private revokeKeyButton (): Locator {
+    return this.page.getByRole('button', { name: 'Revoke' })
+  }
+
+  private revokedKeyStatus (description: string): Locator {
+    const rowLocator = this.keyRow(description)
+    const statusCell = rowLocator.locator('td.govuk-table__cell:nth-child(4)')
+
+    return statusCell
+  }
+
+  private keyRow (description: string): Locator {
+    return this.page.locator(`//tr[td[contains(text(), "${description}")]]`)
+  }
+
+  private backToDashboardLink (): Locator {
+    return this.page.getByRole('link', { name: 'Back to dashboard' })
+  }
+
+  private revokedDate (): string {
+    const today = new Date()
+    const day = today.getDate()
+    const month = today.toLocaleString('default', { month: 'long' })
+    const year = today.getFullYear()
+
+    return `Revoked on ${day} ${month} ${year}`
   }
 }
