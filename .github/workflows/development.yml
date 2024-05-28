@@ -6,6 +6,7 @@ on:
     branches: [ main ]
 jobs:
   test:
+    environment: development
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
@@ -15,10 +16,16 @@ jobs:
         node-version: lts/*
     - name: Install dependencies
       run: npm install -g yarn && yarn
+    - name: Check code
+      run: yarn run lint
     - name: Install Playwright Browsers
       run: yarn playwright install --with-deps
     - name: Run Playwright tests
-      run: yarn playwright test
+      run: yarn run test-development
+      env:
+        CI: true
+        SCP_USERNAME: ${{ secrets.SCP_USERNAME }}
+        SCP_PASSWORD: ${{ secrets.SCP_PASSWORD }}
     - uses: actions/upload-artifact@v4
       if: always()
       with:

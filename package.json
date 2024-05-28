@@ -7,10 +7,21 @@
   "license": "MIT",
   "devDependencies": {
     "@playwright/test": "1.38.0",
-    "@types/node": "^20.12.12"
+    "@types/node": "^20.12.12",
+    "@typescript-eslint/eslint-plugin": "^7.9.0",
+    "dotenv": "^16.4.5",
+    "eslint": "^8.0.1",
+    "eslint-config-standard-with-typescript": "^43.0.1",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-n": "^15.0.0 || ^16.0.0 ",
+    "eslint-plugin-promise": "^6.0.0",
+    "typescript": "^5.4.5"
   },
-  "scripts": {},
-  "dependencies": {
-    "dotenv": "^16.4.5"
+  "scripts": {
+    "lint": "eslint . --ext .ts",
+    "fix": "eslint . --ext .ts --fix",
+    "test-development": "URL=https://hub.dev.trade-tariff.service.gov.uk playwright test",
+    "test-staging": "URL=https://hub.staging.trade-tariff.service.gov.uk playwright test",
+    "test-production": "URL=https://hub.trade-tariff.service.gov.uk playwright test"
   }
 }
