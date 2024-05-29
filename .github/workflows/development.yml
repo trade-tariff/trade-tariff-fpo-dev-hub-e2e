@@ -19,7 +19,7 @@ jobs:
     - name: Check code
       run: yarn run lint
     - name: Install Playwright Browsers
-      run: yarn playwright install --with-deps
+      run: yarn playwright install --with-deps chromium
     - name: Run Playwright tests
       run: yarn run test-development
       env:
