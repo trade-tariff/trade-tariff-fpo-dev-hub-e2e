@@ -1,7 +1,10 @@
 import { defineConfig, devices } from '@playwright/test'
 import dotenv from 'dotenv'
+import path from 'path'
 
-dotenv.config()
+const playwrightEnv = process.env.PLAYWRIGHT_ENV ?? 'development'
+const envFile = path.resolve(__dirname, `.env.${playwrightEnv}`)
+dotenv.config({ path: envFile })
 
 // See https://playwright.dev/docs/test-configuration.
 const onCI = (process.env.CI ?? 'false') === 'true'
