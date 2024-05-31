@@ -24,6 +24,8 @@ export class DashboardPage {
     await this.storeKey(description)
 
     await this.backToDashboardLink().click()
+
+    this.assertDashboardPage()
   }
 
   async revokeKey (description: string): Promise<void> {
