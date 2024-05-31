@@ -20,14 +20,14 @@ export class SignInPage {
     await this.passwordInput().fill(SignInPage.PASSWORD)
     await this.signInButton().click()
 
-    await this.page.waitForURL('**/dashboard/local-development')
+    await this.page.waitForURL('**/dashboard')
 
     return this.page
   }
 
   async signOut (): Promise<Page> {
-    await this.signOutButton().click()
-    await this.page.waitForURL('**/logout')
+    await this.signOutLink().click()
+    await this.page.waitForURL('**/logout?**')
 
     return this.page
   }
@@ -52,7 +52,7 @@ export class SignInPage {
     return this.page.getByRole('button', { name: 'Sign in' })
   }
 
-  private signOutButton (): Locator {
-    return this.page.getByRole('button', { name: 'Sign out' })
+  private signOutLink (): Locator {
+    return this.page.getByRole('link', { name: 'Sign Out' })
   }
 }

@@ -65,29 +65,23 @@ export class DashboardPage {
   }
 
   assertDashboardPage (): void {
-    const expectedUrl = '/dashboard/local-development'
-    // TODO: This should not have local-development in the URL
-    expect(this.page.url()).toContain(expectedUrl)
+    expect(this.page.url()).toContain('/dashboard')
   }
 
   assertNewKeyPage (): void {
-    // TODO: This should not have local-development in the URL
-    expect(this.page.url()).toContain('/dashboard/keys/local-development/new')
+    expect(this.page.url()).toContain('/dashboard/new')
   }
 
   assertRevokeKeyPage (): void {
-    // TODO: This should not have local-development in the URL
-    expect(this.page.url()).toMatch(/\/dashboard\/keys\/local-development\/[A-Z0-9]{20}\/revoke/)
+    expect(this.page.url()).toMatch(/\/dashboard\/[A-Z0-9]{20}\/revoke/)
   }
 
   assertDeleteKeyPage (): void {
-    // TODO: This should not have local-development in the URL
-    expect(this.page.url()).toMatch(/\/dashboard\/keys\/local-development\/[A-Z0-9]{20}\/delete/)
+    expect(this.page.url()).toMatch(/\/dashboard\/[A-Z0-9]{20}\/delete/)
   }
 
   assertCreatePage (): void {
-    // TODO: This should not have local-development in the URL
-    expect(this.page.url()).toContain('/dashboard/keys/local-development/create')
+    expect(this.page.url()).toContain('/dashboard/create')
   }
 
   async storeKey (description: string): Promise<void> {
