@@ -24,6 +24,7 @@ export class DashboardPage {
     await this.storeKey(description)
 
     await this.backToDashboardLink().click()
+
     this.assertDashboardPage()
   }
 
@@ -107,7 +108,7 @@ export class DashboardPage {
   }
 
   private createKeyButton (): Locator {
-    return this.page.getByRole('link', { name: 'Create New Key' })
+    return this.page.getByRole('button', { name: 'Create new key' })
   }
 
   private createKeyDescriptionInput (): Locator {
