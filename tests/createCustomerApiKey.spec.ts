@@ -28,4 +28,6 @@ test('creating, using and revoking a customer api key', async ({ page }) => {
   apiClient.assertUnsuccessful()
 
   await dashboardPage.deleteKey(keyDescription)
+
+  await signInPage.signOut()
 })
