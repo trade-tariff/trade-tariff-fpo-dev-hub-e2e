@@ -74,7 +74,7 @@ export class ApiClient {
     return res
   }
 
-  async assertClassification (expectedClassification: string): Promise<void> {
+  assertClassification (expectedClassification: string): void {
     const data = this.json ?? {}
     const results = data?.results ?? []
     const matchedResult = results.find((result: any) => result.code === expectedClassification)

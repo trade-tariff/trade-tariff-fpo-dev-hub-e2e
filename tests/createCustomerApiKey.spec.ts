@@ -6,7 +6,7 @@ import { test } from '@playwright/test'
 
 test('creating, using and revoking a customer api key', async ({ page }) => {
   const opts: Classifiable = {
-    description: 'haddock',
+    description: 'jewelry case',
     expectFailure: false
   }
   const signInPage = new SignInPage(page)
@@ -18,8 +18,9 @@ test('creating, using and revoking a customer api key', async ({ page }) => {
   await dashboardPage.createKey(keyDescription)
   const apiClient = new ApiClient(dashboardPage.getKey(keyDescription))
   await apiClient.doClassification(opts)
+
   apiClient.assertSuccessful()
-  await apiClient.assertClassification('030364')
+  apiClient.assertClassification('420232')
 
   await dashboardPage.revokeKey(keyDescription)
 
