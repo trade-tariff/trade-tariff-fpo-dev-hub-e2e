@@ -106,7 +106,7 @@ export class DashboardPage {
   }
 
   private createKeyDescriptionInput (): Locator {
-    return this.page.getByLabel('Enter the description for your API key.')
+    return this.page.getByLabel('Enter API Key Description')
   }
 
   private createKeySubmitButton (): Locator {
