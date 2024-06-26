@@ -46,30 +46,42 @@ export class ApiClient {
 
   async handleResponse (opts: HandleResponseOptions): Promise<Response | null> {
     const startTime = Date.now()
-    const { retries = 30, sleepForMillis = 100 } = opts
+    const { retries = 120, sleepForMillis = 1000 } = opts
 
     let currentRetry = 0
     let res: Response | null = null
 
+    let success = false
+    
     for (let i = 0; i < retries; i++) {
       res = await fetch(ApiClient.URL, opts.requestOptions)
 
       if (opts.expectFailure) {
-        if (res.status !== 200) break
+        if (res.status !== 200) {
+          success = true
+          break
+        }
       } else {
-        if (res.status === 200) break
+        if (res.status === 200) {
+          success = true
+          break
+        }
       }
 
       console.log(`Retrying ${currentRetry + 1} times...`)
       currentRetry++
 
-      await new Promise(resolve => setTimeout(resolve, sleepForMillis * currentRetry))
+      await new Promise(resolve => setTimeout(resolve, sleepForMillis))
     }
 
     const endTime = Date.now()
     const deltaSeconds = (endTime - startTime) / 1000
 
-    console.log(`Key ${opts.expectFailure ? 'inactive' : 'active'} in ${deltaSeconds} seconds`)
+    if (success) {
+      console.log(`Key ${opts.expectFailure ? 'inactive' : 'active'} in ${deltaSeconds} seconds`)
+    } else {
+      console.log(`Key failed to be ${opts.expectFailure ? 'inactive' : 'active'} in ${deltaSeconds} seconds`)
+    }
 
     return res
   }
