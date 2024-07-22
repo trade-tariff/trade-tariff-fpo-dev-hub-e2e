@@ -62,6 +62,7 @@ Implementation details for the frontend and backend can be reviewed, here:
 The tests require these 2 environment variables to be set.
 - SCP_USERNAME
 - SCP_PASSWORD
+
 you can use your own SCP credentials to initialize them.
 For the first time, run this command to install Chromium.
 ```
