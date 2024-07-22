@@ -57,3 +57,23 @@ Implementation details for the frontend and backend can be reviewed, here:
 [production-hub]: https://hub.trade-tariff.service.gov.uk/
 [frontend-github]: https://github.com/trade-tariff/trade-tariff-dev-hub-frontend
 [backend-github]: https://github.com/trade-tariff/trade-tariff-dev-hub-backend
+
+### Running tests locally
+The tests require these 2 environment variables to be set.
+- SCP_USERNAME
+- SCP_PASSWORD
+you can use your own SCP credentials to initialize them.
+For the first time, run this command to install Chromium.
+```
+npx playwright install
+```
+
+### Running tests
+```
+npx playwright test
+```
+
+### Running tests in debug mode
+```
+npx playwright test --headed --debug
+```
