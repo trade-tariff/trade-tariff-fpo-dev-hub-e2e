@@ -57,3 +57,17 @@ Implementation details for the frontend and backend can be reviewed, here:
 [production-hub]: https://hub.trade-tariff.service.gov.uk/
 [frontend-github]: https://github.com/trade-tariff/trade-tariff-dev-hub-frontend
 [backend-github]: https://github.com/trade-tariff/trade-tariff-dev-hub-backend
+
+### Running tests locally
+For the first time, run this command to install Chromium 
+```
+npx playwright install
+```
+### Running tests
+```
+npx playwright test
+```
+### Running tests in debug mode
+```
+npx playwright test --headed --debug
+```
