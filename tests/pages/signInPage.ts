@@ -25,6 +25,24 @@ export class SignInPage {
     return this.page
   }
 
+  async updateProfile (): Promise<Page> {
+    await this.updateProfileLink().click()
+    await this.page.waitForURL('**/account/your-details/**')
+    this.assertDescriptionOnPage('Your details')
+    await this.onlineTradeTariffReturnURL().click()
+    expect(this.page.url()).toContain('/dashboard')
+    return this.page
+  }
+
+  async manageTeam (): Promise<Page> {
+    await this.manageTeamLink().click()
+    await this.page.waitForURL('**/group/members/**')
+    this.assertDescriptionOnPage('Team members')
+    await this.onlineTradeTariffReturnURL().click()
+    expect(this.page.url()).toContain('/dashboard')
+    return this.page
+  }
+
   async signOut (): Promise<Page> {
     await this.signOutLink().click()
     await this.page.waitForURL('**/logout?**')
@@ -54,5 +72,21 @@ export class SignInPage {
 
   private signOutLink (): Locator {
     return this.page.getByRole('link', { name: 'Sign Out' })
+  }
+
+  private updateProfileLink (): Locator {
+    return this.page.getByRole('link', { name: 'Update Profile' })
+  }
+
+  private manageTeamLink (): Locator {
+    return this.page.getByRole('link', { name: 'Manage Team' })
+  }
+
+  private onlineTradeTariffReturnURL (): Locator {
+    return this.page.getByRole('link', { name: 'Return to HMRC Online Trade Tariff' })
+  }
+
+  assertDescriptionOnPage (description: string): void {
+    this.page.locator(`//tr[td[contains(text(), "${description}")]]`)
   }
 }

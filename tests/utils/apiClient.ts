@@ -52,7 +52,6 @@ export class ApiClient {
     let res: Response | null = null
 
     let success = false
-    
     for (let i = 0; i < retries; i++) {
       res = await fetch(ApiClient.URL, opts.requestOptions)
 

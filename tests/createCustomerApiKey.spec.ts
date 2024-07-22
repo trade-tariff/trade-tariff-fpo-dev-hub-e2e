@@ -30,5 +30,8 @@ test('creating, using and revoking a customer api key', async ({ page }) => {
 
   await dashboardPage.deleteKey(keyDescription)
 
+  await signInPage.updateProfile()
+  await signInPage.manageTeam()
+
   await signInPage.signOut()
 })
