@@ -20,7 +20,7 @@ test('creating, using and revoking a customer api key', async ({ page }) => {
   await apiClient.doClassification(opts)
 
   apiClient.assertSuccessful()
-  apiClient.assertClassification('420232')
+  apiClient.assertClassification('420292')
 
   await dashboardPage.revokeKey(keyDescription)
 
