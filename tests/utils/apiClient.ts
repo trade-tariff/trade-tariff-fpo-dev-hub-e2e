@@ -16,15 +16,15 @@ export class ApiClient {
   private static readonly URL = process.env.API_URL ?? 'https://search.dev.trade-tariff.service.gov.uk/fpo-code-search'
   private readonly apiKey: string | null
   private status: number | null
-  private json: any
+  private json: unknown
 
-  constructor (apiKey: string | null) {
+  constructor(apiKey: string | null) {
     this.apiKey = apiKey
     this.status = null
     this.json = null
   }
 
-  async doClassification (opts: Classifiable): Promise<void> {
+  async doClassification(opts: Classifiable): Promise<void> {
     const handleOpts: HandleResponseOptions = {
       requestOptions: this.createPostRequestOptions(opts.description),
       expectFailure: opts.expectFailure ?? false
@@ -36,15 +36,15 @@ export class ApiClient {
     this.json = await res?.json()
   }
 
-  assertSuccessful (): void {
+  assertSuccessful(): void {
     expect(this.status).toBe(200)
   }
 
-  assertUnsuccessful (): void {
+  assertUnsuccessful(): void {
     expect(this.status).not.toBe(200)
   }
 
-  async handleResponse (opts: HandleResponseOptions): Promise<Response | null> {
+  async handleResponse(opts: HandleResponseOptions): Promise<Response | null> {
     const startTime = Date.now()
     const { retries = 120, sleepForMillis = 1000 } = opts
 
@@ -85,14 +85,14 @@ export class ApiClient {
     return res
   }
 
-  assertClassification (expectedClassification: string): void {
+  assertClassification(expectedClassification: string): void {
     const data = this.json ?? {}
     const results = data?.results ?? []
-    const matchedResult = results.find((result: any) => result.code === expectedClassification)
+    const matchedResult = results.find((result: unknown) => result.code === expectedClassification)
     expect(matchedResult).toBeDefined()
   }
 
-  private createPostRequestOptions (description: string): RequestInit {
+  private createPostRequestOptions(description: string): RequestInit {
     const body: BodyInit = JSON.stringify({ description })
     return {
       method: 'POST',
