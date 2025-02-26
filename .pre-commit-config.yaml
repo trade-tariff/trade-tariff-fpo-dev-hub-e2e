@@ -18,7 +18,7 @@ repos:
     hooks:
       - id: markdownlint-docker
 
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.16.1
+  - repo: https://github.com/trufflesecurity/trufflehog
+    rev: v3.88.12
     hooks:
-      - id: gitleaks
+      - id: trufflehog
