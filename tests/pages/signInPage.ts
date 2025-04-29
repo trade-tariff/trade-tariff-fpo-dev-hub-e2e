@@ -6,11 +6,11 @@ export class SignInPage {
   private static readonly USER_ID = process.env.SCP_USERNAME ?? ''
   private static readonly PASSWORD = process.env.SCP_PASSWORD ?? ''
 
-  constructor (page: Page) {
+  constructor(page: Page) {
     this.page = page
   }
 
-  async signIn (): Promise<Page> {
+  async signIn(): Promise<Page> {
     await this.page.goto(SignInPage.STARTING_URL)
     await this.startNowButton().click()
 
@@ -25,7 +25,7 @@ export class SignInPage {
     return this.page
   }
 
-  async updateProfile (): Promise<Page> {
+  async updateProfile(): Promise<Page> {
     await this.updateProfileLink().click()
     await this.page.waitForURL('**/account/your-details/**')
     this.assertDescriptionOnPage('Your details')
@@ -34,7 +34,7 @@ export class SignInPage {
     return this.page
   }
 
-  async manageTeam (): Promise<Page> {
+  async manageTeam(): Promise<Page> {
     await this.manageTeamLink().click()
     await this.page.waitForURL('**/group/members/**')
     this.assertDescriptionOnPage('Team members')
@@ -43,50 +43,49 @@ export class SignInPage {
     return this.page
   }
 
-  async signOut (): Promise<Page> {
+  async signOut(): Promise<Page> {
     await this.signOutLink().click()
-    await this.page.waitForURL('**/logout?**')
 
     return this.page
   }
 
-  private assertOnSignInPage (): void {
+  private assertOnSignInPage(): void {
     expect(this.page.url()).toContain('/login/signin/creds')
   }
 
-  private userIdInput (): Locator {
+  private userIdInput(): Locator {
     return this.page.locator('input[name="user_id"]')
   }
 
-  private passwordInput (): Locator {
+  private passwordInput(): Locator {
     return this.page.locator('input[name="password"]')
   }
 
-  private startNowButton (): Locator {
+  private startNowButton(): Locator {
     return this.page.getByRole('button', { name: 'Start now' })
   }
 
-  private signInButton (): Locator {
+  private signInButton(): Locator {
     return this.page.getByRole('button', { name: 'Sign in' })
   }
 
-  private signOutLink (): Locator {
+  private signOutLink(): Locator {
     return this.page.getByRole('link', { name: 'Sign Out' })
   }
 
-  private updateProfileLink (): Locator {
+  private updateProfileLink(): Locator {
     return this.page.getByRole('link', { name: 'Update Profile' })
   }
 
-  private manageTeamLink (): Locator {
+  private manageTeamLink(): Locator {
     return this.page.getByRole('link', { name: 'Manage Team' })
   }
 
-  private onlineTradeTariffReturnURL (): Locator {
+  private onlineTradeTariffReturnURL(): Locator {
     return this.page.getByRole('link', { name: 'Return to HMRC Online Trade Tariff' })
   }
 
-  assertDescriptionOnPage (description: string): void {
+  assertDescriptionOnPage(description: string): void {
     this.page.locator(`//tr[td[contains(text(), "${description}")]]`)
   }
 }

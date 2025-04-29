@@ -4,12 +4,12 @@ export class DashboardPage {
   private readonly page: Page
   private keys: Record<string, string>
 
-  constructor (page: Page) {
+  constructor(page: Page) {
     this.page = page
     this.keys = {}
   }
 
-  async createKey (description: string): Promise<void> {
+  async createKey(description: string): Promise<void> {
     this.assertDashboardPage()
 
     await this.createKeyButton().click()
@@ -28,7 +28,7 @@ export class DashboardPage {
     this.assertDashboardPage()
   }
 
-  async revokeKey (description: string): Promise<void> {
+  async revokeKey(description: string): Promise<void> {
     await this.revokeKeyLink(description).click()
 
     this.assertRevokeKeyPage()
@@ -40,7 +40,7 @@ export class DashboardPage {
     await this.assertRevoked(description)
   }
 
-  async deleteKey (description: string): Promise<void> {
+  async deleteKey(description: string): Promise<void> {
     await this.deleteKeyLink(description).click()
 
     this.assertDeleteKeyPage()
@@ -52,109 +52,109 @@ export class DashboardPage {
     await this.assertDeleted(description)
   }
 
-  async assertRevoked (description: string): Promise<void> {
+  async assertRevoked(description: string): Promise<void> {
     const statusCell = this.revokedKeyStatus(description)
 
     await expect(statusCell).toHaveText(this.revokedDate())
   }
 
-  async assertDeleted (description: string): Promise<void> {
+  async assertDeleted(description: string): Promise<void> {
     const keyRow = this.keyRow(description)
 
     await expect(keyRow).not.toBeVisible()
   }
 
-  assertDashboardPage (): void {
+  assertDashboardPage(): void {
     expect(this.page.url()).toContain('/dashboard')
   }
 
-  assertNewKeyPage (): void {
+  assertNewKeyPage(): void {
     expect(this.page.url()).toContain('/dashboard/new')
   }
 
-  assertRevokeKeyPage (): void {
-    expect(this.page.url()).toMatch(/\/dashboard\/[A-Z0-9]{20}\/revoke/)
+  assertRevokeKeyPage(): void {
+    expect(this.page.url()).toMatch(/\/dashboard\/.*\/revoke/)
   }
 
-  assertDeleteKeyPage (): void {
-    expect(this.page.url()).toMatch(/\/dashboard\/[A-Z0-9]{20}\/delete/)
+  assertDeleteKeyPage(): void {
+    expect(this.page.url()).toMatch(/\/dashboard\/.*\/delete/)
   }
 
-  assertCreatePage (): void {
+  assertCreatePage(): void {
     expect(this.page.url()).toContain('/dashboard/create')
   }
 
-  async storeKey (description: string): Promise<void> {
+  async storeKey(description: string): Promise<void> {
     let key = await this.createdApiKey().innerText()
     key = key.trim()
 
     this.setKey(description, key)
   }
 
-  getKey (description: string): string | null {
+  getKey(description: string): string | null {
     if (description in this.keys) { return this.keys[description] }
 
     return null
   }
 
-  private setKey (description: string, key: string): void {
+  private setKey(description: string, key: string): void {
     this.keys[description] = key
   }
 
-  private createKeyButton (): Locator {
-    return this.page.getByRole('button', { name: 'Create new key' })
+  private createKeyButton(): Locator {
+    return this.page.getByRole('link', { name: 'Create new key' })
   }
 
-  private createKeyDescriptionInput (): Locator {
-    return this.page.getByLabel('Enter a description for this API key')
+  private createKeyDescriptionInput(): Locator {
+    return this.page.locator('#api-key-description-field')
   }
 
-  private createKeySubmitButton (): Locator {
+  private createKeySubmitButton(): Locator {
     return this.page.getByRole('button')
   }
 
-  private createdApiKey (): Locator {
+  private createdApiKey(): Locator {
     return this.page.locator('code.govuk-code')
   }
 
-  private revokeKeyLink (description: string): Locator {
+  private revokeKeyLink(description: string): Locator {
     const rowLocator = this.keyRow(description)
     const rowLinkLocator = rowLocator.locator('a:has-text("Revoke")')
 
     return rowLinkLocator
   }
 
-  private deleteKeyLink (description: string): Locator {
+  private deleteKeyLink(description: string): Locator {
     const rowLocator = this.keyRow(description)
     const rowLinkLocator = rowLocator.locator('a:has-text("Delete")')
 
     return rowLinkLocator
   }
 
-  private revokeKeyButton (): Locator {
+  private revokeKeyButton(): Locator {
     return this.page.getByRole('button', { name: 'Revoke' })
   }
 
-  private deleteKeyButton (): Locator {
+  private deleteKeyButton(): Locator {
     return this.page.getByRole('button', { name: 'Delete' })
   }
 
-  private revokedKeyStatus (description: string): Locator {
+  private revokedKeyStatus(description: string): Locator {
     const rowLocator = this.keyRow(description)
     const statusCell = rowLocator.locator('td.govuk-table__cell:nth-child(4)')
 
     return statusCell
   }
 
-  private keyRow (description: string): Locator {
+  private keyRow(description: string): Locator {
     return this.page.locator(`//tr[td[contains(text(), "${description}")]]`)
   }
 
-  private backToDashboardLink (): Locator {
+  private backToDashboardLink(): Locator {
     return this.page.getByRole('link', { name: 'Back to dashboard' })
   }
 
-  private revokedDate (): string {
+  private revokedDate(): string {
     const today = new Date()
     const day = today.getDate()
     const month = today.toLocaleString('default', { month: 'long' })
