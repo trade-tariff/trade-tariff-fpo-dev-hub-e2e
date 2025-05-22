@@ -1,34 +1,19 @@
 name: development
+
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  dispatch:
+
+permissions:
+  contents: read
+
 jobs:
-  test:
-    environment: development
-    timeout-minutes: 60
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
-    - name: Install dependencies
-      run: npm install -g yarn && yarn
-    - name: Check code
-      run: yarn run lint
-    - name: Install Playwright Browsers
-      run: yarn playwright install --with-deps chromium
-    - name: Run Playwright tests
-      run: yarn run test-development
-      env:
-        CI: true
-        SCP_USERNAME: ${{ secrets.SCP_USERNAME }}
-        SCP_PASSWORD: ${{ secrets.SCP_PASSWORD }}
-    - uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: playwright-report
-        path: playwright-report/
-        retention-days: 2
+  run-tests:
+    uses: trade-tariff/trade-tariff-tools/.github/workflows/e2e-fpo-tests.yml@HMRC-1061-simplify-e2e-flow
+    needs: deploy
+    with:
+      test-environment: development
+      ref: ${{ github.ref }}
+    secrets:
+      scp-username: ${{ secrets.SCP_USERNAME }}
+      scp-password: ${{ secrets.SCP_PASSWORD }}
