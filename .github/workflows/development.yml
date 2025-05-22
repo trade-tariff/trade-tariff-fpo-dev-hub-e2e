@@ -8,9 +8,32 @@ permissions:
   contents: read
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3'
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pre-commit-
+
+      - run: pip install pre-commit
+
+      - run: pre-commit run --all-files
+
+      - run: npm install -g yarn && yarn
+
+      - run: yarn run lint
+
   run-tests:
     uses: trade-tariff/trade-tariff-tools/.github/workflows/e2e-fpo-tests.yml@HMRC-1061-simplify-e2e-flow
-    needs: deploy
     with:
       test-environment: development
       ref: ${{ github.ref }}
