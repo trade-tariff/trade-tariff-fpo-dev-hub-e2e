@@ -5,6 +5,7 @@ import path from 'path'
 const playwrightEnv = process.env.PLAYWRIGHT_ENV ?? 'development'
 const envFile = path.resolve(__dirname, `.env.${playwrightEnv}`)
 dotenv.config({ path: envFile })
+dotenv.config({ path: ".env" });
 
 // See https://playwright.dev/docs/test-configuration.
 const onCI = (process.env.CI ?? 'false') === 'true'

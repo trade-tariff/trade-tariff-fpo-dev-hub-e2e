@@ -20,7 +20,7 @@ export class SignInPage {
     await this.passwordInput().fill(SignInPage.PASSWORD)
     await this.signInButton().click()
 
-    await this.page.waitForURL('**/dashboard')
+    await this.page.waitForURL('**/api_keys')
 
     return this.page
   }
@@ -30,7 +30,7 @@ export class SignInPage {
     await this.page.waitForURL('**/account/your-details/**')
     this.assertDescriptionOnPage('Your details')
     await this.onlineTradeTariffReturnURL().click()
-    expect(this.page.url()).toContain('/dashboard')
+    expect(this.page.url()).toContain('/api_keys')
     return this.page
   }
 
@@ -39,7 +39,7 @@ export class SignInPage {
     await this.page.waitForURL('**/group/members/**')
     this.assertDescriptionOnPage('Team members')
     await this.onlineTradeTariffReturnURL().click()
-    expect(this.page.url()).toContain('/dashboard')
+    expect(this.page.url()).toContain('/api_keys')
     return this.page
   }
 

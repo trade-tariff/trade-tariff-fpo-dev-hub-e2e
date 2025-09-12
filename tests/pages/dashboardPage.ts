@@ -65,23 +65,23 @@ export class DashboardPage {
   }
 
   assertDashboardPage(): void {
-    expect(this.page.url()).toContain('/dashboard')
+    expect(this.page.url()).toContain('/api_keys')
   }
 
   assertNewKeyPage(): void {
-    expect(this.page.url()).toContain('/dashboard/new')
+    expect(this.page.url()).toContain('/api_keys/new')
   }
 
   assertRevokeKeyPage(): void {
-    expect(this.page.url()).toMatch(/\/dashboard\/.*\/revoke/)
+    expect(this.page.url()).toMatch(/\/api_keys\/.*\/revoke/)
   }
 
   assertDeleteKeyPage(): void {
-    expect(this.page.url()).toMatch(/\/dashboard\/.*\/delete/)
+    expect(this.page.url()).toMatch(/\/api_keys\/.*\/delete/)
   }
 
   assertCreatePage(): void {
-    expect(this.page.url()).toContain('/dashboard/create')
+    expect(this.page.url()).toContain('/api_keys')
   }
 
   async storeKey(description: string): Promise<void> {
@@ -151,7 +151,7 @@ export class DashboardPage {
   }
 
   private backToDashboardLink(): Locator {
-    return this.page.getByRole('link', { name: 'Back to dashboard' })
+    return this.page.getByRole('link', { name: 'Back to api keys' })
   }
 
   private revokedDate(): string {
