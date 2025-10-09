@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   lint:
@@ -37,6 +38,3 @@ jobs:
     with:
       test-environment: development
       ref: ${{ github.ref }}
-    secrets:
-      scp-username: ${{ secrets.SCP_USERNAME }}
-      scp-password: ${{ secrets.SCP_PASSWORD }}

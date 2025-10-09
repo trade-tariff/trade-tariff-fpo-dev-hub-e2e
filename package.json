@@ -6,11 +6,13 @@
   "author": "William Fish <william.michael.fish@gmail.com>",
   "license": "MIT",
   "devDependencies": {
+    "@aws-sdk/client-s3": "^3.906.0",
     "@eslint/js": "^9.21.0",
     "@playwright/test": "1.50.1",
     "@types/node": "^22.13.5",
     "@typescript-eslint/eslint-plugin": "^8.25.0",
     "@typescript-eslint/parser": "^8.25.0",
+    "cheerio": "^1.1.2",
     "dotenv": "^16.4.7",
     "eslint": "^9.21.0",
     "eslint-config-standard-with-typescript": "^43.0.1",
@@ -18,6 +20,7 @@
     "eslint-plugin-n": "^17.15.1",
     "eslint-plugin-promise": "^7.2.1",
     "globals": "^16.0.0",
+    "mailparser": "^3.7.4",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.25.0"
   },
