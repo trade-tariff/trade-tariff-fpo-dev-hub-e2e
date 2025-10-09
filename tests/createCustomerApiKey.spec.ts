@@ -1,4 +1,4 @@
-import { SignInPage } from './pages/signInPage'
+import { LoginPage } from './pages/loginPage'
 import { DashboardPage } from './pages/dashboardPage'
 import { type Classifiable, ApiClient } from './utils/apiClient'
 
@@ -9,12 +9,12 @@ test('creating, using and revoking a customer api key', async ({ page }) => {
     description: 'jewelry case',
     expectFailure: false
   }
-  const signInPage = new SignInPage(page)
+  const loginPage = new LoginPage(page)
   const dashboardPage = new DashboardPage(page)
 
   const keyDescription = `playwright-${Date.now()}`
 
-  await signInPage.signIn()
+  await loginPage.login()
   await dashboardPage.createKey(keyDescription)
   const apiClient = new ApiClient(dashboardPage.getKey(keyDescription))
   await apiClient.doClassification(opts)
@@ -30,8 +30,5 @@ test('creating, using and revoking a customer api key', async ({ page }) => {
 
   await dashboardPage.deleteKey(keyDescription)
 
-  await signInPage.updateProfile()
-  await signInPage.manageTeam()
-
-  await signInPage.signOut()
+  await loginPage.signOut()
 })
