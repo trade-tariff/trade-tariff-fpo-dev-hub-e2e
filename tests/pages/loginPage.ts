@@ -8,6 +8,8 @@ export class LoginPage {
   private static readonly EMAIL_ADDRESS = process.env.EMAIL_ADDRESS ?? ''
   private static readonly INBOUND_BUCKET = process.env.INBOUND_BUCKET ?? ''
   private static readonly LOCK_KEY = process.env.LOCK_KEY ?? ''
+  private static readonly NON_ADMIN_BYPASS_PASSWORD = process.env.NON_ADMIN_BYPASS_PASSWORD ?? ''
+  private static readonly ADMIN_BYPASS_PASSWORD = process.env.ADMIN_BYPASS_PASSWORD ?? ''
 
   private readonly page: Page
   private readonly fetcher: EmailFetcher
@@ -30,6 +32,12 @@ export class LoginPage {
   async login(): Promise<Page> {
     await this.page.goto(LoginPage.STARTING_URL)
     await this.startNowButton().click()
+
+    // Wait for navigation after clicking "Start now"
+    await this.page.waitForLoadState('networkidle')
+
+    // Handle dev bypass page if present (only appears in dev environment)
+    await this.handleDevBypassIfPresent()
 
     this.assertOnLoginPage()
     await this.locker.withLock(async () => {
@@ -66,6 +74,59 @@ export class LoginPage {
 
   private signOutLink(): Locator {
     return this.page.getByRole('link', { name: 'Sign Out' })
+  }
+
+  private async handleDevBypassIfPresent(): Promise<void> {
+    const currentUrl = this.page.url()
+
+    // Check if we're on the dev bypass page
+    if (currentUrl.includes('/dev/login')) {
+      // Wait for the dev login page to be fully loaded
+      await this.page.waitForSelector('h1:has-text("Dev Login")')
+
+      // Click the link to use real identity service
+      await this.page.getByRole('link', { name: 'Use real identity service' }).click()
+
+      // Wait for navigation to the identity service login page
+      await this.page.waitForURL('https://id.dev.trade-tariff.service.gov.uk/login')
+      await this.page.waitForLoadState('networkidle')
+    }
+  }
+
+  async loginWithDevBypass(): Promise<Page> {
+    await this.page.goto(LoginPage.STARTING_URL)
+    await this.startNowButton().click()
+
+    // Wait for navigation after clicking "Start now"
+    await this.page.waitForLoadState('networkidle')
+
+    // Handle dev bypass page with password
+    const currentUrl = this.page.url()
+    if (currentUrl.includes('/dev/login')) {
+      // Wait for the dev login page to be fully loaded
+      await this.page.waitForSelector('h1:has-text("Dev Login")')
+
+      // Fill in the dev password - try multiple selectors to find the password field
+      const passwordInput = this.page.locator('input[type="password"]').first()
+      await passwordInput.fill(LoginPage.NON_ADMIN_BYPASS_PASSWORD)
+
+      // Submit the form - try to find submit button by various means
+      const submitButton = this.page.getByRole('button').filter({ hasText: /submit|login|sign in/i }).first()
+      if (await submitButton.count() > 0) {
+        await submitButton.click()
+      } else {
+        // Fallback: press Enter on the password field
+        await passwordInput.press('Enter')
+      }
+
+      // Wait for navigation to the api_keys page
+      await this.page.waitForURL('**/api_keys')
+      await this.page.waitForLoadState('networkidle')
+    } else {
+      throw new Error('Dev bypass page not found. This method should only be used in dev environment.')
+    }
+
+    return this.page
   }
 
   private async waitForEmail() {
