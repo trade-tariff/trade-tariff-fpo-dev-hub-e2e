@@ -3,6 +3,7 @@ import {
   PutObjectCommand,
   HeadObjectCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { setTimeout as sleep } from "timers/promises";
 
@@ -17,6 +18,8 @@ export default class S3Lock {
   private s3Client: S3Client;
   private maxWaitMs: number;
   private pollIntervalMs: number;
+  private handlersRegistered: boolean = false;
+  private isLocked: boolean = false;
 
   constructor(
     bucket: string,
@@ -45,9 +48,37 @@ export default class S3Lock {
           IfNoneMatch: "*",
         }),
       );
+      this.isLocked = true;
       return true;
     } catch (error: unknown) {
       if ((error as Error).name === "PreconditionFailed") {
+        // Check if the existing lock is stale
+        const isStale = await this.isLockStale();
+        if (isStale) {
+          console.log("Detected stale lock, attempting to remove it");
+          await this.forceRelease();
+          // Try to acquire again
+          try {
+            await this.s3Client.send(
+              new PutObjectCommand({
+                Bucket: this.bucket,
+                Key: this.lockKey,
+                Body: JSON.stringify({
+                  lockedAt: new Date().toISOString(),
+                  pid: process.pid,
+                } as LockData),
+                IfNoneMatch: "*",
+              }),
+            );
+            this.isLocked = true;
+            return true;
+          } catch (retryError: unknown) {
+            if ((retryError as Error).name === "PreconditionFailed") {
+              return false;
+            }
+            throw retryError;
+          }
+        }
         return false;
       }
       throw error;
@@ -70,18 +101,96 @@ export default class S3Lock {
   }
 
   async release(): Promise<void> {
-    await this.s3Client.send(
-      new DeleteObjectCommand({
-        Bucket: this.bucket,
-        Key: this.lockKey,
-      }),
-    );
+    if (!this.isLocked) {
+      return;
+    }
+    try {
+      await this.s3Client.send(
+        new DeleteObjectCommand({
+          Bucket: this.bucket,
+          Key: this.lockKey,
+        }),
+      );
+      this.isLocked = false;
+    } catch (error: unknown) {
+      // Log but don't throw - lock might have been released already
+      console.warn("Error releasing lock (may have been released already):", error);
+      this.isLocked = false;
+    }
+  }
+
+  private async forceRelease(): Promise<void> {
+    try {
+      await this.s3Client.send(
+        new DeleteObjectCommand({
+          Bucket: this.bucket,
+          Key: this.lockKey,
+        }),
+      );
+      this.isLocked = false;
+    } catch (error: unknown) {
+      // Ignore errors when force releasing
+      console.warn("Error force releasing lock:", error);
+    }
+  }
+
+  private async isLockStale(): Promise<boolean> {
+    try {
+      const response = await this.s3Client.send(
+        new HeadObjectCommand({
+          Bucket: this.bucket,
+          Key: this.lockKey,
+        }),
+      );
+
+      // Check if lock is older than 5 minutes (likely stale)
+      const lockAge = Date.now() - (response.LastModified?.getTime() ?? 0);
+      const staleThreshold = 5 * 60 * 1000; // 5 minutes
+
+      if (lockAge > staleThreshold) {
+        return true;
+      }
+
+      // Try to get the lock data to check PID
+      try {
+        const getResponse = await this.s3Client.send(
+          new GetObjectCommand({
+            Bucket: this.bucket,
+            Key: this.lockKey,
+          }),
+        );
+        const body = await getResponse.Body?.transformToString();
+        if (body) {
+          const lockData: LockData = JSON.parse(body);
+          // Check if the PID is still running (Unix only)
+          try {
+            process.kill(lockData.pid, 0); // Signal 0 checks if process exists
+            return false; // Process is still running
+          } catch {
+            return true; // Process doesn't exist, lock is stale
+          }
+        }
+      } catch {
+        // If we can't read the lock data, assume it's not stale
+        return false;
+      }
+
+      return false;
+    } catch (error: unknown) {
+      if ((error as Error).name === "NotFound") {
+        return false; // No lock exists, so it's not stale
+      }
+      // If we can't check, assume it's not stale to be safe
+      return false;
+    }
   }
 
   async withLock<T>(callback: () => Promise<T>): Promise<T> {
     const start = Date.now();
     this.registerShutdownHandlers();
+    let attempt = 0;
     while (Date.now() - start < this.maxWaitMs) {
+      attempt++;
       if (await this.acquire()) {
         try {
           return await callback();
@@ -89,12 +198,21 @@ export default class S3Lock {
           await this.release();
         }
       }
-      await sleep(this.pollIntervalMs);
+      const elapsed = Date.now() - start;
+      if (elapsed < this.maxWaitMs) {
+        await sleep(this.pollIntervalMs);
+      }
     }
-    throw new Error(`Failed to acquire lock after ${this.maxWaitMs}ms`);
+    throw new Error(`Failed to acquire lock after ${this.maxWaitMs}ms (${attempt} attempts)`);
   }
 
   private registerShutdownHandlers(): void {
+    // Only register handlers once per instance
+    if (this.handlersRegistered) {
+      return;
+    }
+    this.handlersRegistered = true;
+
     process.once("SIGTERM", async () => {
       console.log("SIGTERM received; attempting lock release");
       await this.release();
@@ -116,12 +234,7 @@ export default class S3Lock {
       await this.release();
       process.exit(1);
     });
-    process.once("exit", (code: number) => {
-      console.log(
-        `Process exiting with code ${code}; attempting sync lock release`,
-      );
-      // Note: 'exit' is synchronous, so async release() is fire-and-forget
-      void this.release();
-    });
+    // Note: 'exit' handler removed as it can cause issues with normal cleanup
+    // The finally block in withLock should handle normal cleanup
   }
 }
