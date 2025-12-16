@@ -58,19 +58,90 @@ Implementation details for the frontend and backend can be reviewed, here:
 [frontend-github]: https://github.com/trade-tariff/trade-tariff-dev-hub-frontend
 [backend-github]: https://github.com/trade-tariff/trade-tariff-dev-hub-backend
 
+## Setup
+
+### Prerequisites
+
+- Node.js and Yarn installed
+- AWS CLI configured with appropriate credentials
+- Access to the S3 bucket for email fetching and lock management
+
+### Installation
+
+1. Install dependencies:
+   ```bash
+   yarn install
+   ```
+
+2. Install Playwright browsers:
+   ```bash
+   yarn run playwright install --with-deps chromium
+   ```
+
+3. Install pre-commit hooks:
+   ```bash
+   pre-commit install
+   ```
+
 ## Running tests locally
 
-The tests require these 2 environment variables to be set.
+### Environment Files
 
-- SCP_USERNAME
-- SCP_PASSWORD
+The project uses different `.env` files for different purposes:
 
-you can use your own SCP credentials to initialize them.
-For the first time, run this command to install Chromium.
+- **`.env`** - For local secrets (personal credentials, local overrides)
+- **`.env.development`** - Configuration for the development account (in the e2e project)
+- **`.env.staging`** - Configuration for the staging account
+- **`.env.production`** - Configuration for the production account (note: currently in a transitional state)
 
-```bash
-yarn run playwright install
-```
+> Note: All `.env*` files are gitignored and won't be committed to the repository.
+
+### Setting up environment variables
+
+You can set environment variables either by:
+
+1. **Using environment files** (recommended):
+   - Create a `.env` file for your local secrets
+   - Create a `.env.development` file for development account configuration:
+     ```bash
+     URL=https://hub.dev.trade-tariff.service.gov.uk
+     EMAIL_ADDRESS=your-email@example.com
+     INBOUND_BUCKET=your-s3-bucket-name
+     LOCK_KEY=locks/your-lock-key.lock
+     NON_ADMIN_BYPASS_PASSWORD=your-dev-bypass-password
+     ADMIN_BYPASS_PASSWORD=your-admin-bypass-password
+     ```
+
+2. **Using export commands** in your shell:
+   ```bash
+   export URL=https://hub.dev.trade-tariff.service.gov.uk
+   export EMAIL_ADDRESS=your-email@example.com
+   export INBOUND_BUCKET=your-s3-bucket-name
+   export LOCK_KEY=locks/your-lock-key.lock
+   export NON_ADMIN_BYPASS_PASSWORD=your-dev-bypass-password
+   export ADMIN_BYPASS_PASSWORD=your-admin-bypass-password
+   ```
+
+**Required environment variables:**
+- `URL` - The hub URL to test against
+- `EMAIL_ADDRESS` - Email address for passwordless login flow
+- `INBOUND_BUCKET` - S3 bucket name for email fetching and lock management
+- `LOCK_KEY` - S3 key path for the distributed lock file
+- `NON_ADMIN_BYPASS_PASSWORD` - Password for dev bypass login (non-admin user) **(place this in `.env`)**
+- `ADMIN_BYPASS_PASSWORD` - Password for dev bypass login (admin user) **(place this in `.env`)**
+
+**AWS Credentials:**
+You'll also need valid AWS credentials configured (via AWS CLI, `AWS_PROFILE`, or environment variables) to access the S3 bucket for email fetching and lock management.
+
+### Quick Start for Local Development
+
+1. Create a `.env` file for your local secrets (if needed)
+2. Create a `.env.development` file with the development account configuration (see above)
+3. Ensure AWS credentials are configured:
+   ```bash
+   aws sso login --profile <your-profile>
+   export AWS_PROFILE=<your-profile>
+   ```
 
 ## Running tests
 
@@ -83,3 +154,15 @@ yarn run test-development
 ```bash
 yarn run playwright test --headed --debug
 ```
+
+## Running tests in CI/GitHub Actions
+
+For running tests in GitHub Actions, the following secrets need to be configured in the repository:
+
+- `NON_ADMIN_BYPASS_PASSWORD` - Password for dev bypass login (non-admin user)
+- `ADMIN_BYPASS_PASSWORD` - Password for dev bypass login (admin user)
+- `EMAIL_ADDRESS` - Email address for passwordless login flow
+- `INBOUND_BUCKET` - S3 bucket name for email fetching and lock management
+- `LOCK_KEY` - S3 key path for the distributed lock file
+
+These secrets are automatically passed to the test execution via the workflow configuration.
