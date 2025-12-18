@@ -14,7 +14,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: onCI,
   retries: onCI ? 2 : 0,
-  workers: onCI ? 1 : undefined,
+  workers: 1,
   reporter: 'html',
   use: { trace: 'on' },
   timeout: 140000, // 140 seconds - occasionally keys take a while to go live
