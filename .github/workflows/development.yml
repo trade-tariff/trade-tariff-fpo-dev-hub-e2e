@@ -39,5 +39,5 @@ jobs:
       test-environment: development
       ref: ${{ github.ref }}
     secrets:
-      NON_ADMIN_BYPASS_PASSWORD: ${{ secrets.NON_ADMIN_BYPASS_PASSWORD }}
-      ADMIN_BYPASS_PASSWORD: ${{ secrets.ADMIN_BYPASS_PASSWORD }}
+      NON_ADMIN_BYPASS_PASSWORD: "${{ secrets.NON_ADMIN_BYPASS_PASSWORD }}"
+      ADMIN_BYPASS_PASSWORD: "${{ secrets.ADMIN_BYPASS_PASSWORD }}"
