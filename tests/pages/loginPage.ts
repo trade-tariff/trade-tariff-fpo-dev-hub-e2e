@@ -46,7 +46,14 @@ export class LoginPage {
       await this.waitForEmail();
       await this.verifyPasswordlessLinkFromEmail();
     });
-    await this.page.waitForURL('**/api_keys')
+
+    // Wait for redirect to organisation page (UUID pattern)
+    await this.page.waitForURL(/\/organisations\/[a-f0-9-]+/, { timeout: 140000 })
+    await this.page.waitForLoadState('networkidle')
+
+    // Verify we're on the organisation account page
+    await expect(this.page.locator('h1')).toContainText('Your organisation account', { timeout: 10000 })
+
     return this.page
   }
 
@@ -122,11 +129,14 @@ export class LoginPage {
         await passwordInput.press('Enter')
       }
 
-      await this.page.waitForURL('**/api_keys', { timeout: 140000 })
-
+      // Wait for redirect to organisation page (UUID pattern)
+      await this.page.waitForURL(/\/organisations\/[a-f0-9-]+/, { timeout: 140000 })
       await this.page.waitForLoadState('networkidle')
+
+      // Verify we're on the organisation account page
+      await expect(this.page.locator('h1')).toContainText('Your organisation account', { timeout: 10000 })
     } else {
-      throw new Error('Dev bypass page not found. This method should only be used in dev environment.')
+      throw new Error(`Dev bypass page not found. This method should only be used in dev environment. Current URL: ${currentUrl}`)
     }
 
     return this.page
