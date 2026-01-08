@@ -9,6 +9,7 @@ export class LoginPage {
   private static readonly INBOUND_BUCKET = process.env.INBOUND_BUCKET ?? ''
   private static readonly LOCK_KEY = process.env.LOCK_KEY ?? ''
   private static readonly NON_ADMIN_BYPASS_PASSWORD = process.env.NON_ADMIN_BYPASS_PASSWORD ?? ''
+  private static readonly ADMIN_BYPASS_PASSWORD = process.env.ADMIN_BYPASS_PASSWORD ?? ''
 
   private readonly page: Page
   private readonly fetcher: EmailFetcher
