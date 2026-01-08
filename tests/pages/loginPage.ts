@@ -9,7 +9,6 @@ export class LoginPage {
   private static readonly INBOUND_BUCKET = process.env.INBOUND_BUCKET ?? ''
   private static readonly LOCK_KEY = process.env.LOCK_KEY ?? ''
   private static readonly NON_ADMIN_BYPASS_PASSWORD = process.env.NON_ADMIN_BYPASS_PASSWORD ?? ''
-  private static readonly ADMIN_BYPASS_PASSWORD = process.env.ADMIN_BYPASS_PASSWORD ?? ''
 
   private readonly page: Page
   private readonly fetcher: EmailFetcher
@@ -94,62 +93,38 @@ export class LoginPage {
   }
 
   async loginWithDevBypass(): Promise<Page> {
-    console.log(`[loginWithDevBypass] Navigating to start: ${LoginPage.STARTING_URL}`)
     await this.page.goto(LoginPage.STARTING_URL)
 
-    console.log(`[loginWithDevBypass] Clicking "Start now" button`)
     await this.startNowButton().click()
 
-    console.log(`[loginWithDevBypass] Waiting for network idle after Start now`)
     await this.page.waitForLoadState('networkidle')
 
     const currentUrl = this.page.url()
-    console.log(`[loginWithDevBypass] Current URL after Start now: ${currentUrl}`)
 
     if (currentUrl.includes('/dev/login')) {
-      console.log(`[loginWithDevBypass] On dev/login page, waiting for heading`)
       await this.page.waitForSelector('h1:has-text("Dev Login")')
 
       const passwordInput = this.page.locator('input[type="password"]').first()
       const passwordInputCount = await passwordInput.count()
-      console.log(`[loginWithDevBypass] Password input count: ${passwordInputCount}`)
       if (passwordInputCount === 0) {
         throw new Error('Password input field not found on dev login page')
       }
 
       const password = LoginPage.NON_ADMIN_BYPASS_PASSWORD
-      console.log(`[loginWithDevBypass] Non-admin password length: ${password.length}`)
 
-      console.log(`[loginWithDevBypass] Filling password field`)
       await passwordInput.fill(password)
 
-      console.log(`[loginWithDevBypass] Looking for submit button`)
       const submitButton = this.page.getByRole('button').filter({ hasText: /submit|login|sign in/i }).first()
       if (await submitButton.count() > 0) {
-        console.log(`[loginWithDevBypass] Clicking submit button`)
         await submitButton.click()
       } else {
-        console.log(`[loginWithDevBypass] No submit button, pressing Enter`)
         await passwordInput.press('Enter')
       }
 
-      console.log(`[loginWithDevBypass] Waiting for navigation to **/api_keys`)
-      try {
-        await this.page.waitForURL('**/api_keys', { timeout: 140000 })
-        console.log(`[loginWithDevBypass] Navigated to api_keys, URL now: ${this.page.url()}`)
-      } catch (error) {
-        console.log(`[loginWithDevBypass] TIMEOUT waiting for **/api_keys, current URL: ${this.page.url()}`)
-        console.log(`[loginWithDevBypass] Page title: ${await this.page.title()}`)
-        const content = await this.page.content()
-        console.log(`[loginWithDevBypass] Page content preview: ${content.substring(0, 500)}`)
-        throw error
-      }
+      await this.page.waitForURL('**/api_keys', { timeout: 140000 })
 
-      console.log(`[loginWithDevBypass] Waiting for network idle post-navigation`)
       await this.page.waitForLoadState('networkidle')
-      console.log(`[loginWithDevBypass] Login complete`)
     } else {
-      console.log(`[loginWithDevBypass] Dev bypass page not found. Current URL: ${currentUrl}`)
       throw new Error('Dev bypass page not found. This method should only be used in dev environment.')
     }
 
