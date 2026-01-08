@@ -67,7 +67,7 @@ export class ApiClient {
         }
       }
 
-      console.log(`Retrying ${currentRetry + 1} times... see extra lines here`)
+      console.log(`Retrying ${currentRetry + 1} times...`)
       currentRetry++
 
       await new Promise(resolve => setTimeout(resolve, sleepForMillis))
