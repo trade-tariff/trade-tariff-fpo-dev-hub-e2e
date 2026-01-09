@@ -22,7 +22,11 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] }
+      use: {
+        ...devices['Desktop Chrome'],
+        // Slow down actions for local debugging (set SLOW_MO env var, e.g., SLOW_MO=500)
+        slowMo: process.env.SLOW_MO ? parseInt(process.env.SLOW_MO) : 0
+      }
     }
   ]
 })
