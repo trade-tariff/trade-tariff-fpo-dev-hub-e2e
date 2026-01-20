@@ -17,7 +17,7 @@ export default defineConfig({
   workers: onCI ? 1 : undefined,
   reporter: 'html',
   use: { trace: 'on' },
-  timeout: 140000, // 140 seconds - occasionally keys take a while to go live
+  timeout: 50000, // keys take a while to go live
 
   projects: [
     {
