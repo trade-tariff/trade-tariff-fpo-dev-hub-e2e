@@ -12,6 +12,8 @@ export class DashboardPage {
   async createKey(description: string): Promise<void> {
     this.assertDashboardPage()
 
+    await this.navigateToFpoKeysTab()
+
     await this.createKeyButton().click()
 
     this.assertNewKeyPage()
@@ -19,53 +21,124 @@ export class DashboardPage {
     await this.createKeyDescriptionInput().fill(description)
     await this.createKeySubmitButton().click()
 
-    this.assertCreatePage()
+    // Verify key creation success page
+    await this.assertKeyCreationSuccess()
 
     await this.storeKey(description)
 
+    // Click "Back to api keys" to see the key row in the table
     await this.backToDashboardLink().click()
 
-    this.assertDashboardPage()
+    // After clicking back, we're on the /api_keys page where we can see the key row
+    this.assertApiKeysPage()
+
+    await this.assertKeyCreated(description)
   }
 
   async revokeKey(description: string): Promise<void> {
+    // Navigate to /api_keys page (or use FPO Keys tab if on dashboard)
+    await this.ensureOnApiKeysPage()
+
     await this.revokeKeyLink(description).click()
 
     this.assertRevokeKeyPage()
+    await this.assertRevokeConfirmationPage(description)
 
     await this.revokeKeyButton().click()
 
-    this.assertDashboardPage()
+    // After revoking, we're redirected back to the /api_keys page
+    this.assertApiKeysPage()
 
     await this.assertRevoked(description)
   }
 
   async deleteKey(description: string): Promise<void> {
+    // Navigate to /api_keys page (or use FPO Keys tab if on dashboard)
+    await this.ensureOnApiKeysPage()
+
     await this.deleteKeyLink(description).click()
 
     this.assertDeleteKeyPage()
+    await this.assertDeleteConfirmationPage(description)
 
     await this.deleteKeyButton().click()
 
-    this.assertDashboardPage()
+    // After deleting, we're redirected back to the /api_keys page
+    this.assertApiKeysPage()
 
     await this.assertDeleted(description)
   }
 
   async assertRevoked(description: string): Promise<void> {
-    const statusCell = this.revokedKeyStatus(description)
+    // We're already on the /api_keys page after revoking
+    const keyRow = this.keyRow(description)
+    await expect(keyRow).toBeVisible()
 
+    // Verify status shows "Revoked"
+    const statusCell = this.revokedKeyStatus(description)
     await expect(statusCell).toHaveText(this.revokedDate())
+
+    // Verify "Delete" link is visible (replaces "Revoke" link)
+    const deleteLink = this.deleteKeyLink(description)
+    await expect(deleteLink).toBeVisible()
   }
 
   async assertDeleted(description: string): Promise<void> {
+    // We're already on the /api_keys page after deleting
     const keyRow = this.keyRow(description)
 
     await expect(keyRow).not.toBeVisible()
   }
 
+  async assertKeyCreated(description: string): Promise<void> {
+    const keyRow = this.keyRow(description)
+    await expect(keyRow).toBeVisible()
+
+    // Verify status is "Active"
+    const statusCell = this.keyStatus(description)
+    await expect(statusCell).toContainText(/active/i)
+
+    // Verify description matches
+    const descriptionCell = this.keyDescription(description)
+    await expect(descriptionCell).toContainText(description)
+
+    // Verify "Revoke" link is visible for active keys
+    const revokeLink = this.revokeKeyLink(description)
+    await expect(revokeLink).toBeVisible()
+  }
+
+  async assertKeyCreationSuccess(): Promise<void> {
+    // Verify success panel
+    await expect(this.page.getByText(/Your API Key has been created successfully/i)).toBeVisible()
+
+    // Verify warning message
+    await expect(this.page.getByText(/You must copy this key to somewhere safe/i)).toBeVisible()
+
+    // Verify API Key secret is displayed
+    await expect(this.createdApiKey()).toBeVisible()
+
+    // Verify "Copy to clipboard" button exists
+    await expect(this.copyToClipboardButton()).toBeVisible()
+  }
+
+  async assertRevokeConfirmationPage(description: string): Promise<void> {
+    // Verify warning message
+    await expect(this.page.getByText(/Your API Key will be revoked with immediate effect/i)).toBeVisible()
+
+    // Verify key details are shown (description should be visible)
+    await expect(this.page.getByText(description)).toBeVisible()
+  }
+
+  async assertDeleteConfirmationPage(description: string): Promise<void> {
+    // Verify warning message
+    await expect(this.page.getByText(/Your API Key will be deleted with immediate effect/i)).toBeVisible()
+
+    // Verify key details are shown (description should be visible)
+    await expect(this.page.getByText(description)).toBeVisible()
+  }
+
   assertDashboardPage(): void {
-    expect(this.page.url()).toContain('/api_keys')
+    expect(this.page.url()).toMatch(/\/organisations\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
   }
 
   assertNewKeyPage(): void {
@@ -81,6 +154,10 @@ export class DashboardPage {
   }
 
   assertCreatePage(): void {
+    expect(this.page.url()).toContain('/api_keys')
+  }
+
+  assertApiKeysPage(): void {
     expect(this.page.url()).toContain('/api_keys')
   }
 
@@ -110,7 +187,7 @@ export class DashboardPage {
   }
 
   private createKeySubmitButton(): Locator {
-    return this.page.getByRole('button')
+    return this.page.getByRole('button', { name: /continue/i })
   }
 
   private createdApiKey(): Locator {
@@ -139,15 +216,54 @@ export class DashboardPage {
     return this.page.getByRole('button', { name: 'Delete' })
   }
 
-  private revokedKeyStatus(description: string): Locator {
+  private keyStatus(description: string): Locator {
     const rowLocator = this.keyRow(description)
     const statusCell = rowLocator.locator('td.govuk-table__cell:nth-child(4)')
 
     return statusCell
   }
 
+  private revokedKeyStatus(description: string): Locator {
+    return this.keyStatus(description)
+  }
+
+  private keyDescription(description: string): Locator {
+    const rowLocator = this.keyRow(description)
+    // Description is typically in the first or second column
+    return rowLocator.locator('td').first()
+  }
+
+  private copyToClipboardButton(): Locator {
+    return this.page.getByRole('button', { name: /copy to clipboard/i })
+  }
+
   private keyRow(description: string): Locator {
     return this.page.locator(`//tr[td[contains(text(), "${description}")]]`)
+  }
+
+  private async navigateToFpoKeysTab(): Promise<void> {
+    const fpoKeysTab = this.fpoKeysTab()
+    await fpoKeysTab.click()
+    await this.page.waitForLoadState('networkidle')
+  }
+
+  private async ensureOnApiKeysPage(): Promise<void> {
+    if (!this.page.url().includes('/api_keys')) {
+      // If on dashboard, navigate via FPO Keys tab
+      if (this.page.url().match(/\/organisations\/[0-9a-f-]+$/i)) {
+        await this.navigateToFpoKeysTab()
+      } else {
+        // Otherwise navigate directly to /api_keys
+        await this.page.goto(`${this.page.url().split('/').slice(0, 3).join('/')}/api_keys`)
+        await this.page.waitForLoadState('networkidle')
+      }
+    }
+  }
+
+  private fpoKeysTab(): Locator {
+    return this.page.getByRole('link', { name: /FPO Keys/i }).or(
+      this.page.getByRole('tab', { name: /FPO Keys/i })
+    )
   }
 
   private backToDashboardLink(): Locator {

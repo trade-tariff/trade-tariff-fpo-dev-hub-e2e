@@ -8,7 +8,7 @@ export class LoginPage {
   private static readonly EMAIL_ADDRESS = process.env.EMAIL_ADDRESS ?? ''
   private static readonly INBOUND_BUCKET = process.env.INBOUND_BUCKET ?? ''
   private static readonly LOCK_KEY = process.env.LOCK_KEY ?? ''
-  private static readonly NON_ADMIN_BYPASS_PASSWORD = process.env.NON_ADMIN_BYPASS_PASSWORD ?? ''
+  private static readonly NON_ADMIN_BYPASS_PASSWORD = process.env.NON_ADMIN_BYPASS_PASSWORD ?? 'tariff123'
 
   private readonly page: Page
   private readonly fetcher: EmailFetcher
@@ -29,8 +29,9 @@ export class LoginPage {
   }
 
   async login(): Promise<Page> {
-    await this.page.goto(LoginPage.STARTING_URL)
-    await this.startNowButton().click()
+    // Navigate directly to /dev/login for non-admin user
+    const loginUrl = `${LoginPage.STARTING_URL}/dev/login`
+    await this.page.goto(loginUrl)
     await this.page.waitForLoadState('networkidle')
 
     if (this.page.url().includes('/dev/login')) {
@@ -40,15 +41,11 @@ export class LoginPage {
     }
 
     await this.page.waitForLoadState('networkidle')
-    await this.navigateToApiKeys()
-    return this.page
-  }
 
-  private async navigateToApiKeys(): Promise<void> {
-    if (!this.page.url().includes('/api_keys')) {
-      await this.page.goto(`${LoginPage.STARTING_URL}/api_keys`)
-      await this.page.waitForLoadState('networkidle')
-    }
+    // Verify redirect to organisation page after login
+    expect(this.page.url()).toMatch(/\/organisations\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+
+    return this.page
   }
 
   async signOut(): Promise<Page> {
