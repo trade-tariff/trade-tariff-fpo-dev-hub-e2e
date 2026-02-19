@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test'
 import dotenv from 'dotenv'
 import path from 'path'
 
+// PLAYWRIGHT_ENV selects .env.development, .env.staging, .env.production, etc.
 const playwrightEnv = process.env.PLAYWRIGHT_ENV ?? 'development'
 const envFile = path.resolve(__dirname, `.env.${playwrightEnv}`)
 dotenv.config({ path: envFile })

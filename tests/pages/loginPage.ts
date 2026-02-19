@@ -1,14 +1,25 @@
 import { type Page, type Locator, expect } from '@playwright/test'
 
-import EmailFetcher, { EmailData } from "../utils/emailFetcher.js";
-import S3Lock from "../utils/s3Lock.js";
+import EmailFetcher, { type EmailData } from '../utils/emailFetcher.js'
+import S3Lock from '../utils/s3Lock.js'
 
+/**
+ * Login uses passwordless email flow in all environments (dev and staging):
+ * - Click "Start now".
+ * - In dev: land on dev login page → click "Use real identity service" → email page.
+ * - In staging: go straight to email page.
+ * - Then enter email, receive link from SES, follow link.
+ */
 export class LoginPage {
   private static readonly STARTING_URL = process.env.URL ?? 'https://hub.dev.trade-tariff.service.gov.uk'
   private static readonly EMAIL_ADDRESS = process.env.EMAIL_ADDRESS ?? ''
   private static readonly INBOUND_BUCKET = process.env.INBOUND_BUCKET ?? ''
   private static readonly LOCK_KEY = process.env.LOCK_KEY ?? ''
-  private static readonly NON_ADMIN_BYPASS_PASSWORD = process.env.NON_ADMIN_BYPASS_PASSWORD ?? 'tariff123'
+
+  /** Max time to wait for passwordless login email (ms). */
+  private static readonly EMAIL_WAIT_MS = 20 * 1000
+  /** Poll interval while waiting for email (ms). */
+  private static readonly EMAIL_POLL_MS = 1 * 1000
 
   private readonly page: Page
   private readonly fetcher: EmailFetcher
@@ -28,24 +39,36 @@ export class LoginPage {
     );
   }
 
+  /**
+   * Log in via passwordless email (same flow in dev and staging).
+   * Requires URL, EMAIL_ADDRESS, INBOUND_BUCKET, and LOCK_KEY to be set in env.
+   */
   async login(): Promise<Page> {
-    // Navigate directly to /dev/login for non-admin user
-    const loginUrl = `${LoginPage.STARTING_URL}/dev/login`
-    await this.page.goto(loginUrl)
-    await this.page.waitForLoadState('networkidle')
+    this.requireEnvForLogin()
 
-    if (this.page.url().includes('/dev/login')) {
-      await this.loginViaDevBypass()
-    } else {
-      await this.loginViaPasswordlessEmail()
-    }
+    await this.loginViaPasswordlessEmail()
 
     await this.page.waitForLoadState('networkidle')
 
-    // Verify redirect to organisation page after login
+    // Verify we landed on the organisation dashboard
     expect(this.page.url()).toMatch(/\/organisations\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
 
     return this.page
+  }
+
+  /** Fail fast with a clear message if required env vars are missing. */
+  private requireEnvForLogin(): void {
+    const missing: string[] = []
+    if (!LoginPage.STARTING_URL) missing.push('URL')
+    if (!LoginPage.EMAIL_ADDRESS) missing.push('EMAIL_ADDRESS')
+    if (!LoginPage.INBOUND_BUCKET) missing.push('INBOUND_BUCKET')
+    if (!LoginPage.LOCK_KEY) missing.push('LOCK_KEY')
+    if (missing.length > 0) {
+      throw new Error(
+        `Missing required environment variables for login: ${missing.join(', ')}. ` +
+        'Set them in .env or .env.development / .env.staging (see README).'
+      )
+    }
   }
 
   async signOut(): Promise<Page> {
@@ -53,26 +76,35 @@ export class LoginPage {
     return this.page
   }
 
-  private async loginViaDevBypass(): Promise<void> {
-    await this.page.waitForSelector('h1:has-text("Dev Login")')
+  private async loginViaPasswordlessEmail(): Promise<void> {
+    // Navigate to base URL and click "Start now" to initiate login flow
+    await this.page.goto(LoginPage.STARTING_URL)
+    await this.page.waitForLoadState('networkidle')
 
-    const passwordInput = this.page.locator('input[type="password"]').first()
-    await passwordInput.fill(LoginPage.NON_ADMIN_BYPASS_PASSWORD)
+    // Click "Start now" → dev shows dev login page; staging goes straight to identity email page
+    await this.startNowButton().click()
+    await this.page.waitForLoadState('networkidle')
 
-    const submitButton = this.page.getByRole('button').filter({ hasText: /submit|login|sign in/i }).first()
-    if (await submitButton.count() > 0) {
-      await submitButton.click()
-    } else {
-      await passwordInput.press('Enter')
+    // In dev only: dev login page has "Use real identity service" → click to reach email page
+    const useRealIdentity = this.page.getByRole('link', { name: /use real identity service/i })
+      .or(this.page.getByRole('button', { name: /use real identity service/i }))
+    try {
+      await useRealIdentity.first().click({ timeout: 3000 })
+      await this.page.waitForLoadState('networkidle')
+    } catch {
+      // Staging: button not present, we're already on the email page
     }
 
-    await this.page.waitForLoadState('networkidle')
-  }
-
-  private async loginViaPasswordlessEmail(): Promise<void> {
     this.assertOnLoginPage()
+
     await this.locker.withLock(async () => {
-      await this.emailInput().fill(LoginPage.EMAIL_ADDRESS)
+      // Try the specific form field first, then fall back to any email input
+      const specificInput = this.page.locator('input[name="passwordless_form[email]"]')
+      const emailInput = (await specificInput.count() > 0)
+        ? specificInput
+        : this.page.locator('input[type="email"]').first()
+
+      await emailInput.fill(LoginPage.EMAIL_ADDRESS)
       await this.continueButton().click()
       await this.waitForEmail();
       await this.verifyPasswordlessLinkFromEmail();
@@ -81,10 +113,6 @@ export class LoginPage {
 
   private assertOnLoginPage(): void {
     expect(this.page.url()).toContain('/login')
-  }
-
-  private emailInput(): Locator {
-    return this.page.locator('input[name="passwordless_form[email]"]')
   }
 
   private startNowButton(): Locator {
@@ -100,22 +128,21 @@ export class LoginPage {
   }
 
   private async waitForEmail() {
-    const timeout = 20 * 1000;
     const startTime = Date.now();
 
-    while (Date.now() - startTime < timeout) {
+    while (Date.now() - startTime < LoginPage.EMAIL_WAIT_MS) {
       const email = await this.fetcher.getLatestEmail();
 
-      if (email && email.send_date > new Date(Date.now() - timeout)) {
+      if (email && email.send_date > new Date(Date.now() - LoginPage.EMAIL_WAIT_MS)) {
         this.email = email;
         break;
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 1 * 1000));
+      await new Promise((resolve) => setTimeout(resolve, LoginPage.EMAIL_POLL_MS));
     }
     if (this.email) return this.email;
 
-    throw new Error("No email received within the timeout period");
+    throw new Error(`No email received within ${LoginPage.EMAIL_WAIT_MS}ms`);
   }
 
   async verifyPasswordlessLinkFromEmail() {
