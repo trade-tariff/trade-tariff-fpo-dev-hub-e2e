@@ -94,7 +94,7 @@ The project uses different `.env` files for different purposes:
 - **`.env.staging`** - Configuration for the staging account
 - **`.env.production`** - Configuration for the production account (note: currently in a transitional state)
 
-> Note: All `.env*` files are gitignored and won't be committed to the repository.
+> **Security:** All `.env` and `.env.*` files are gitignored. Never commit them—they may contain bucket names, URLs, or secrets. Use `.env.example` only for non-secret template values.
 
 ### Setting up environment variables
 
@@ -108,8 +108,6 @@ You can set environment variables either by:
      EMAIL_ADDRESS=your-email@example.com
      INBOUND_BUCKET=your-s3-bucket-name
      LOCK_KEY=locks/your-lock-key.lock
-     NON_ADMIN_BYPASS_PASSWORD=your-dev-bypass-password
-     ADMIN_BYPASS_PASSWORD=your-admin-bypass-password
      ```
 
 2. **Using export commands** in your shell:
@@ -118,8 +116,6 @@ You can set environment variables either by:
    export EMAIL_ADDRESS=your-email@example.com
    export INBOUND_BUCKET=your-s3-bucket-name
    export LOCK_KEY=locks/your-lock-key.lock
-   export NON_ADMIN_BYPASS_PASSWORD=your-dev-bypass-password
-   export ADMIN_BYPASS_PASSWORD=your-admin-bypass-password
    ```
 
 **Required environment variables:**
@@ -127,8 +123,6 @@ You can set environment variables either by:
 - `EMAIL_ADDRESS` - Email address for passwordless login flow
 - `INBOUND_BUCKET` - S3 bucket name for email fetching and lock management
 - `LOCK_KEY` - S3 key path for the distributed lock file
-- `NON_ADMIN_BYPASS_PASSWORD` - Password for dev bypass login (non-admin user) **(place this in `.env`)**
-- `ADMIN_BYPASS_PASSWORD` - Password for dev bypass login (admin user) **(place this in `.env`)**
 
 **AWS Credentials:**
 You'll also need valid AWS credentials configured (via AWS CLI, `AWS_PROFILE`, or environment variables) to access the S3 bucket for email fetching and lock management.
@@ -146,8 +140,12 @@ You'll also need valid AWS credentials configured (via AWS CLI, `AWS_PROFILE`, o
 ## Running tests
 
 ```bash
-yarn run test-development
+yarn run test-development   # dev
+yarn run test-staging       # staging
+yarn run test --headed      # with browser visible
 ```
+
+For a short “how the tests work” guide, see [docs/TESTS.md](docs/TESTS.md).
 
 ## Running tests in debug mode
 
@@ -159,8 +157,6 @@ yarn run playwright test --headed --debug
 
 For running tests in GitHub Actions, the following secrets need to be configured in the repository:
 
-- `NON_ADMIN_BYPASS_PASSWORD` - Password for dev bypass login (non-admin user)
-- `ADMIN_BYPASS_PASSWORD` - Password for dev bypass login (admin user)
 - `EMAIL_ADDRESS` - Email address for passwordless login flow
 - `INBOUND_BUCKET` - S3 bucket name for email fetching and lock management
 - `LOCK_KEY` - S3 key path for the distributed lock file

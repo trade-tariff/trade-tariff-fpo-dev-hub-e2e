@@ -12,8 +12,17 @@ interface HandleResponseOptions {
   sleepForMillis?: number
 }
 
+/**
+ * Client for the FPO code-search classification API. Used to verify that
+ * a created API key works and that a revoked key is rejected.
+ */
 export class ApiClient {
   private static readonly URL = process.env.API_URL ?? 'https://search.dev.trade-tariff.service.gov.uk/fpo-code-search'
+
+  /** Retries while API key propagation is delayed (e.g. after create/revoke). */
+  private static readonly DEFAULT_RETRIES = 120
+  private static readonly RETRY_SLEEP_MS = 1000
+
   private readonly apiKey: string | null
   private status: number | null
   private json: unknown
@@ -46,15 +55,16 @@ export class ApiClient {
 
   async handleResponse(opts: HandleResponseOptions): Promise<Response | null> {
     const startTime = Date.now()
-    const { retries = 120, sleepForMillis = 1000 } = opts
+    const retries = opts.retries ?? ApiClient.DEFAULT_RETRIES
+    const sleepForMillis = opts.sleepForMillis ?? ApiClient.RETRY_SLEEP_MS
 
-    let currentRetry = 0
     let res: Response | null = null
-
     let success = false
-    for (let i = 0; i < retries; i++) {
+
+    for (let attempt = 0; attempt < retries; attempt++) {
       res = await fetch(ApiClient.URL, opts.requestOptions)
 
+      // When expectFailure, we succeed when status !== 200 (key revoked/invalid).
       if (opts.expectFailure) {
         if (res.status !== 200) {
           success = true
@@ -67,9 +77,7 @@ export class ApiClient {
         }
       }
 
-      console.log(`Retrying ${currentRetry + 1} times...`)
-      currentRetry++
-
+      console.log(`Retrying ${attempt + 1} times...`)
       await new Promise(resolve => setTimeout(resolve, sleepForMillis))
     }
 

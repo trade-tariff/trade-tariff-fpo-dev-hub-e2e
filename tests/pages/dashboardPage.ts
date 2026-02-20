@@ -1,5 +1,9 @@
 import { type Locator, expect, type Page } from '@playwright/test'
 
+/**
+ * Page object for the FPO hub dashboard: organisation view, API keys tab,
+ * create/revoke/delete key flows, and reading the created key value for API calls.
+ */
 export class DashboardPage {
   private readonly page: Page
   private keys: Record<string, string>
@@ -195,17 +199,11 @@ export class DashboardPage {
   }
 
   private revokeKeyLink(description: string): Locator {
-    const rowLocator = this.keyRow(description)
-    const rowLinkLocator = rowLocator.locator('a:has-text("Revoke")')
-
-    return rowLinkLocator
+    return this.keyRow(description).getByRole('link', { name: 'Revoke' })
   }
 
   private deleteKeyLink(description: string): Locator {
-    const rowLocator = this.keyRow(description)
-    const rowLinkLocator = rowLocator.locator('a:has-text("Delete")')
-
-    return rowLinkLocator
+    return this.keyRow(description).getByRole('link', { name: 'Delete' })
   }
 
   private revokeKeyButton(): Locator {
@@ -216,11 +214,9 @@ export class DashboardPage {
     return this.page.getByRole('button', { name: 'Delete' })
   }
 
+  /** Status cell is the 4th column in the API keys table (1-based). */
   private keyStatus(description: string): Locator {
-    const rowLocator = this.keyRow(description)
-    const statusCell = rowLocator.locator('td.govuk-table__cell:nth-child(4)')
-
-    return statusCell
+    return this.keyRow(description).locator('td.govuk-table__cell:nth-child(4)')
   }
 
   private revokedKeyStatus(description: string): Locator {
@@ -228,17 +224,16 @@ export class DashboardPage {
   }
 
   private keyDescription(description: string): Locator {
-    const rowLocator = this.keyRow(description)
-    // Description is typically in the first or second column
-    return rowLocator.locator('td').first()
+    return this.keyRow(description).locator('td').first()
   }
 
   private copyToClipboardButton(): Locator {
     return this.page.getByRole('button', { name: /copy to clipboard/i })
   }
 
+  /** Table row for the API key with this description. Avoids XPath injection by using filter. */
   private keyRow(description: string): Locator {
-    return this.page.locator(`//tr[td[contains(text(), "${description}")]]`)
+    return this.page.getByRole('row').filter({ hasText: description })
   }
 
   private async navigateToFpoKeysTab(): Promise<void> {
@@ -249,11 +244,10 @@ export class DashboardPage {
 
   private async ensureOnApiKeysPage(): Promise<void> {
     if (!this.page.url().includes('/api_keys')) {
-      // If on dashboard, navigate via FPO Keys tab
       if (this.page.url().match(/\/organisations\/[0-9a-f-]+$/i)) {
         await this.navigateToFpoKeysTab()
       } else {
-        // Otherwise navigate directly to /api_keys
+        // Build base URL (origin) from current URL and go to /api_keys
         await this.page.goto(`${this.page.url().split('/').slice(0, 3).join('/')}/api_keys`)
         await this.page.waitForLoadState('networkidle')
       }
