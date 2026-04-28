@@ -48,9 +48,8 @@ export class LoginPage {
 
     await this.loginViaPasswordlessEmail()
 
-    await this.page.waitForLoadState('networkidle')
-
     // Verify we landed on the organisation dashboard
+    await this.page.waitForURL(/\/organisations\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
     expect(this.page.url()).toMatch(/\/organisations\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
 
     return this.page
@@ -79,22 +78,23 @@ export class LoginPage {
   private async loginViaPasswordlessEmail(): Promise<void> {
     // Navigate to base URL and click "Start now" to initiate login flow
     await this.page.goto(LoginPage.STARTING_URL)
-    await this.page.waitForLoadState('networkidle')
+    await this.startNowButton().waitFor({ state: 'visible' })
 
     // Click "Start now" → dev shows dev login page; staging goes straight to identity email page
     await this.startNowButton().click()
-    await this.page.waitForLoadState('networkidle')
+    await this.waitForLoginEntryPoint()
 
     // In dev only: dev login page has "Use real identity service" → click to reach email page
     const useRealIdentity = this.page.getByRole('link', { name: /use real identity service/i })
       .or(this.page.getByRole('button', { name: /use real identity service/i }))
     try {
       await useRealIdentity.first().click({ timeout: 3000 })
-      await this.page.waitForLoadState('networkidle')
+      await this.waitForEmailInput()
     } catch {
       // Staging: button not present, we're already on the email page
     }
 
+    await this.waitForEmailInput()
     this.assertOnLoginPage()
 
     await this.locker.withLock(async () => {
@@ -113,6 +113,29 @@ export class LoginPage {
 
   private assertOnLoginPage(): void {
     expect(this.page.url()).toContain('/login')
+  }
+
+  private async waitForLoginEntryPoint(): Promise<void> {
+    const useRealIdentity = this.page.getByRole('link', { name: /use real identity service/i })
+      .or(this.page.getByRole('button', { name: /use real identity service/i }))
+    const specificEmailInput = this.page.locator('input[name="passwordless_form[email]"]')
+    const genericEmailInput = this.page.locator('input[type="email"]').first()
+
+    await Promise.race([
+      useRealIdentity.first().waitFor({ state: 'visible', timeout: 15_000 }),
+      specificEmailInput.waitFor({ state: 'visible', timeout: 15_000 }),
+      genericEmailInput.waitFor({ state: 'visible', timeout: 15_000 }),
+      this.page.waitForURL(/\/dev\/login|\/login/, { timeout: 15_000 }),
+    ])
+  }
+
+  private async waitForEmailInput(): Promise<void> {
+    const specificEmailInput = this.page.locator('input[name="passwordless_form[email]"]')
+    const genericEmailInput = this.page.locator('input[type="email"]').first()
+    await Promise.race([
+      specificEmailInput.waitFor({ state: 'visible', timeout: 15_000 }),
+      genericEmailInput.waitFor({ state: 'visible', timeout: 15_000 }),
+    ])
   }
 
   private startNowButton(): Locator {
