@@ -12,10 +12,11 @@ dotenv.config({ path: ".env" });
 const onCI = (process.env.CI ?? 'false') === 'true'
 export default defineConfig({
   testDir: './tests',
-  fullyParallel: true,
+  // Serial execution: login uses one EMAIL_ADDRESS + S3 inbox + distributed lock; parallel workers cause timeouts.
+  fullyParallel: false,
   forbidOnly: onCI,
   retries: onCI ? 2 : 0,
-  workers: onCI ? 1 : undefined,
+  workers: 1,
   reporter: 'html',
   use: { trace: 'on' },
   timeout: 50000, // keys take a while to go live
