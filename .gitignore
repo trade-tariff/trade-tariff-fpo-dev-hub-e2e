@@ -6,6 +6,7 @@ node_modules/
 
 .direnv
 .envrc
+/.pre-commit-config-nix.yaml
 
 # Do not commit env files (may contain bucket names, URLs, or secrets)
 .env
