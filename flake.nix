@@ -72,12 +72,12 @@
             };
             sort-file-contents = {
               enable = true;
-              files = "^\\.env\\.(development|staging|production)$";
+              files = "^\\.env\\.(development|example|staging|production)$";
               stages = [ "pre-commit" ];
             };
             statix = {
               enable = true;
-              settings.ignore = [ ".direnv" ];
+              settings.ignore = [ "{.direnv,.nix,.worktrees}/**" ];
               stages = [ "pre-commit" ];
             };
             trim-trailing-whitespace = {
