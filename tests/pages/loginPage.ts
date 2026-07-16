@@ -3,22 +3,13 @@ import { type Page, type Locator, expect } from '@playwright/test'
 import EmailFetcher, { type EmailData } from '../utils/emailFetcher.js'
 import S3Lock from '../utils/s3Lock.js'
 
-/**
- * Login uses passwordless email flow in all environments (dev and staging):
- * - Click "Start now".
- * - In dev: land on dev login page → click "Use real identity service" → email page.
- * - In staging: go straight to email page.
- * - Then enter email, receive link from SES, follow link.
- */
 export class LoginPage {
   private static readonly STARTING_URL = process.env.URL ?? 'https://hub.dev.trade-tariff.service.gov.uk'
   private static readonly EMAIL_ADDRESS = process.env.EMAIL_ADDRESS ?? ''
   private static readonly INBOUND_BUCKET = process.env.INBOUND_BUCKET ?? ''
   private static readonly LOCK_KEY = process.env.LOCK_KEY ?? ''
 
-  /** Max time to wait for passwordless login email (ms). */
   private static readonly EMAIL_WAIT_MS = 20 * 1000
-  /** Poll interval while waiting for email (ms). */
   private static readonly EMAIL_POLL_MS = 1 * 1000
 
   private readonly page: Page
@@ -39,10 +30,8 @@ export class LoginPage {
     );
   }
 
-  /**
-   * Log in via passwordless email (same flow in dev and staging).
-   * Requires URL, EMAIL_ADDRESS, INBOUND_BUCKET, and LOCK_KEY to be set in env.
-   */
+  // Log in via passwordless email
+  // Requires URL, EMAIL_ADDRESS, INBOUND_BUCKET, and LOCK_KEY to be set in env
   async login(): Promise<Page> {
     this.requireEnvForLogin()
 
@@ -55,7 +44,6 @@ export class LoginPage {
     return this.page
   }
 
-  /** Fail fast with a clear message if required env vars are missing. */
   private requireEnvForLogin(): void {
     const missing: string[] = []
     if (!LoginPage.STARTING_URL) missing.push('URL')
@@ -80,19 +68,8 @@ export class LoginPage {
     await this.page.goto(LoginPage.STARTING_URL)
     await this.startNowButton().waitFor({ state: 'visible' })
 
-    // Click "Start now" → dev shows dev login page; staging goes straight to identity email page
     await this.startNowButton().click()
     await this.waitForLoginEntryPoint()
-
-    // In dev only: dev login page has "Use real identity service" → click to reach email page
-    const useRealIdentity = this.page.getByRole('link', { name: /use real identity service/i })
-      .or(this.page.getByRole('button', { name: /use real identity service/i }))
-    try {
-      await useRealIdentity.first().click({ timeout: 3000 })
-      await this.waitForEmailInput()
-    } catch {
-      // Staging: button not present, we're already on the email page
-    }
 
     await this.waitForEmailInput()
     this.assertOnLoginPage()
@@ -105,9 +82,10 @@ export class LoginPage {
         : this.page.locator('input[type="email"]').first()
 
       await emailInput.fill(LoginPage.EMAIL_ADDRESS)
-      await this.continueButton().click()
+      await this.continueButton().click();
       await this.waitForEmail();
-      await this.verifyPasswordlessLinkFromEmail();
+      await this.enterCodeFromEmail();
+      await this.continueButton().click();
     });
   }
 
@@ -150,6 +128,10 @@ export class LoginPage {
     return this.page.getByRole('link', { name: 'Sign Out' })
   }
 
+  private otpFirstDigitInput(): Locator {
+    return this.page.locator('input[aria-label="Digit 1 of 6"]')
+  }
+
   private async waitForEmail() {
     const startTime = Date.now();
 
@@ -168,16 +150,13 @@ export class LoginPage {
     throw new Error(`No email received within ${LoginPage.EMAIL_WAIT_MS}ms`);
   }
 
-  async verifyPasswordlessLinkFromEmail() {
-    if (
-      !this.email ||
-      !this.email.whitelistedLinks ||
-      this.email.whitelistedLinks.length === 0
-    ) {
-      throw new Error("No valid email links found");
-    }
+  private async enterCodeFromEmail() {
+    if (!this.email || !this.email.code) {
+      throw new error("No OTP code found");
 
-    const link = this.email.whitelistedLinks[0];
-    await this.page.goto(link);
+      const code = this.email.code;
+      await this.otpFirstDigitInput().click();
+      await this.otpFirstDigitInput().pressSequentially(code);
+    }
   }
 }
