@@ -7,9 +7,7 @@ import {
   _Object,
   GetObjectOutput,
 } from "@aws-sdk/client-s3";
-import { URL } from "url";
 import { simpleParser, ParsedMail } from "mailparser";
-import { load } from "cheerio";
 
 export interface EmailData {
   from: string;
@@ -18,7 +16,7 @@ export interface EmailData {
   subject: string;
   body: string;
   s3_key: string;
-  whitelistedLinks?: string[];
+  code?: string;
 }
 
 export default class EmailFetcher {
@@ -58,9 +56,9 @@ export default class EmailFetcher {
         emailData &&
         emailData.to.toLowerCase().includes(this.recipient.toLowerCase())
       ) {
-        const whitelistedLinks = this.getWhitelistedLinks(emailData);
-        if (whitelistedLinks.length > 0) {
-          emailData.whitelistedLinks = whitelistedLinks;
+        const code = this.extractCode(emailData);
+        if (code) {
+          emailData.code = code;
           email = emailData;
           break;
         }
@@ -111,35 +109,11 @@ export default class EmailFetcher {
     }
   }
 
-  private extractLinks(emailObj: EmailData): string[] {
-    if (!emailObj || !emailObj.body) return [];
-    const $ = load(emailObj.body);
-    const anchorLinks = $("a")
-      .map((_i, el) => $(el).attr("href"))
-      .get()
-      .filter((href): href is string => Boolean(href));
-    const plainLinks = [
-      ...emailObj.body.matchAll(/(https?:\/\/[^\s<>"']+)/gi),
-    ].map((m) => m[1]);
-    return [...new Set([...anchorLinks, ...plainLinks])];
-  }
+  private extractCode(emailObj: EmailData): string {
+    if (!emailObj || !emailObj.body) return "";
+    const codeRegex = /(?:Enter this code to log in: )(\d{6})/g;
+    const emailCode: string[] = [...emailObj.body.matchAll(codeRegex)].map((m) => m[1])
 
-  private getWhitelistedLinks(emailObj: EmailData): string[] {
-    const encodedEmail = encodeURIComponent(this.recipient).replace(
-      /[-/\\^$*+?.()|[\]{}]/g,
-      "\\$&",
-    );
-    const callbackRegex = new RegExp(
-      `^(?:https?:\\/\\/)?(?:id\\.dev|id\\.staging)\\.trade-tariff\\.service\\.gov\\.uk\\/passwordless\\/callback\\?email=${encodedEmail}&token=[a-f0-9]{64}$`,
-    );
-    const allLinks = this.extractLinks(emailObj);
-    return allLinks.filter((link) => {
-      try {
-        return callbackRegex.test(new URL(link).href);
-      } catch (error) {
-        console.log(`Invalid URL in email`, error);
-        return false;
-      }
-    });
+    return emailCode[0] || "";
   }
 }

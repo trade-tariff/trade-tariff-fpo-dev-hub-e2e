@@ -19,7 +19,7 @@ test('creating, using and revoking a customer api key', async ({ page }) => {
     expectFailure: false
   }
 
-  // 1. Log in (passwordless email; dev may show "Use real identity service" first)
+  // 1. Log in
   await loginPage.login()
 
   // 2. Create a new API key and remember it
