@@ -14,7 +14,7 @@ test('creating, revoking and deleting a trade tariff key', async ({ page }) => {
 
   const keyDescription = `playwright-trade-tariff-${Date.now()}`
 
-  // 1. Log in (passwordless email; dev may show "Use real identity service" first)
+  // 1. Log in
   await loginPage.login()
 
   // 2. Create a new Trade Tariff key and ensure the secret was captured

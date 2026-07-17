@@ -16,7 +16,7 @@ export interface EmailData {
   subject: string;
   body: string;
   s3_key: string;
-  whitelistedLinks?: string[];
+  code?: string;
 }
 
 export default class EmailFetcher {
@@ -109,11 +109,11 @@ export default class EmailFetcher {
     }
   }
 
-  private extractCode(emailObj: EmailData): string[] {
-    if (!emailObj || !emailObj.body) return [];
-    const codeRegex = /(\d{6})/;
+  private extractCode(emailObj: EmailData): string {
+    if (!emailObj || !emailObj.body) return "";
+    const codeRegex = /(?:Enter this code to log in: )(\d{6})/g;
     const emailCode: string[] = [...emailObj.body.matchAll(codeRegex)].map((m) => m[1])
 
-    return emailCode;
+    return emailCode[0] || "";
   }
 }

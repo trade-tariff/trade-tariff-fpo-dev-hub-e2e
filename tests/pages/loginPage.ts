@@ -94,13 +94,10 @@ export class LoginPage {
   }
 
   private async waitForLoginEntryPoint(): Promise<void> {
-    const useRealIdentity = this.page.getByRole('link', { name: /use real identity service/i })
-      .or(this.page.getByRole('button', { name: /use real identity service/i }))
     const specificEmailInput = this.page.locator('input[name="passwordless_form[email]"]')
     const genericEmailInput = this.page.locator('input[type="email"]').first()
 
     await Promise.race([
-      useRealIdentity.first().waitFor({ state: 'visible', timeout: 15_000 }),
       specificEmailInput.waitFor({ state: 'visible', timeout: 15_000 }),
       genericEmailInput.waitFor({ state: 'visible', timeout: 15_000 }),
       this.page.waitForURL(/\/dev\/login|\/login/, { timeout: 15_000 }),
@@ -152,11 +149,11 @@ export class LoginPage {
 
   private async enterCodeFromEmail() {
     if (!this.email || !this.email.code) {
-      throw new error("No OTP code found");
-
-      const code = this.email.code;
-      await this.otpFirstDigitInput().click();
-      await this.otpFirstDigitInput().pressSequentially(code);
+      throw new Error("No OTP code found");
     }
+
+    const code = this.email.code;
+    await this.otpFirstDigitInput().click();
+    await this.otpFirstDigitInput().pressSequentially(code);
   }
 }
