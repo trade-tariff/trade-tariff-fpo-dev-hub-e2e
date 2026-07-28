@@ -9,6 +9,7 @@
     "@aws-sdk/client-s3": "^3.1083.0",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.61.1",
+    "@types/mailparser": "3.4.6",
     "@types/node": "^26.1.1",
     "@typescript-eslint/eslint-plugin": "^8.25.0",
     "@typescript-eslint/parser": "^8.25.0",
@@ -26,6 +27,7 @@
   "scripts": {
     "lint": "eslint . --ext .ts",
     "fix": "eslint . --ext .ts --fix",
+    "typecheck": "tsc --noEmit",
     "test": "playwright test",
     "test-development": "PLAYWRIGHT_ENV=development playwright test",
     "test-staging": "PLAYWRIGHT_ENV=staging playwright test",

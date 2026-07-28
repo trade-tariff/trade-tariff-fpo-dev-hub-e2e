@@ -7,7 +7,7 @@ import {
   _Object,
   GetObjectOutput,
 } from "@aws-sdk/client-s3";
-import { simpleParser, ParsedMail } from "mailparser";
+import { simpleParser, AddressObject, ParsedMail } from "mailparser";
 
 export interface EmailData {
   from: string;
@@ -17,6 +17,29 @@ export interface EmailData {
   body: string;
   s3_key: string;
   code?: string;
+}
+
+/** Subset of the AWS SdkStream mixin present on S3 GetObject bodies at runtime. */
+interface TransformableBody {
+  transformToString: (encoding?: string) => Promise<string>;
+}
+
+function addressText(address: AddressObject | AddressObject[] | undefined): string {
+  if (!address) {
+    return "Unknown";
+  }
+  if (Array.isArray(address)) {
+    return address.map((entry) => entry.text).filter(Boolean).join(", ") || "Unknown";
+  }
+  return address.text || "Unknown";
+}
+
+function hasTransformToString(body: unknown): body is TransformableBody {
+  return (
+    typeof body === "object" &&
+    body !== null &&
+    typeof (body as TransformableBody).transformToString === "function"
+  );
 }
 
 export default class EmailFetcher {
@@ -86,19 +109,20 @@ export default class EmailFetcher {
     if (!Body) {
       return null;
     }
-    const chunks: Uint8Array[] = [];
-    for await (const chunk of Body) {
-      chunks.push(chunk);
+    // GetObjectOutput types Body without the runtime SdkStream mixin methods.
+    // In Node the client always attaches transformToString; guard rather than cast.
+    if (!hasTransformToString(Body)) {
+      throw new Error(`S3 body for ${key} does not support transformToString`);
     }
-    const rawEmail = Buffer.concat(chunks).toString("utf-8");
+    const rawEmail = await Body.transformToString("utf-8");
     return this._parseMime(rawEmail, key);
   }
 
   private async _parseMime(rawEmail: string, key: string): Promise<EmailData | null> {
     try {
       const parsed: ParsedMail = await simpleParser(rawEmail);
-      const from = parsed.from?.text || "Unknown";
-      const to = parsed.to?.text || "Unknown";
+      const from = addressText(parsed.from);
+      const to = addressText(parsed.to);
       const subject = parsed.subject || "No Subject";
       const send_date = parsed.date || new Date();
       const body = parsed.html || parsed.textAsHtml || parsed.text || "";
