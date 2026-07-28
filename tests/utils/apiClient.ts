@@ -5,6 +5,14 @@ export interface Classifiable {
   expectFailure?: boolean
 }
 
+interface ClassificationResult {
+  code: string
+}
+
+interface ClassificationResponse {
+  results?: ClassificationResult[]
+}
+
 interface HandleResponseOptions {
   requestOptions: RequestInit
   expectFailure: boolean
@@ -94,9 +102,9 @@ export class ApiClient {
   }
 
   assertClassification(expectedClassification: string): void {
-    const data = this.json ?? {}
-    const results = data?.results ?? []
-    const matchedResult = results.find((result: unknown) => result.code === expectedClassification)
+    const data = (this.json ?? {}) as ClassificationResponse
+    const results = data.results ?? []
+    const matchedResult = results.find((result) => result.code === expectedClassification)
     expect(matchedResult).toBeDefined()
   }
 
