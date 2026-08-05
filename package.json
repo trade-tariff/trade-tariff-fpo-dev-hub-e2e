@@ -19,7 +19,7 @@
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-n": "^18.2.2",
     "eslint-plugin-promise": "^7.2.1",
-    "globals": "^17.7.0",
+    "globals": "^17.8.0",
     "mailparser": "^3.9.14",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.65.0"
