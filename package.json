@@ -6,7 +6,7 @@
   "author": "William Fish <william.michael.fish@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@aws-sdk/client-s3": "^3.1092.0",
+    "@aws-sdk/client-s3": "^3.1097.0",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.61.1",
     "@types/mailparser": "3.4.6",
