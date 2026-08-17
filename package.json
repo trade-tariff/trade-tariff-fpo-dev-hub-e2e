@@ -8,7 +8,7 @@
   "devDependencies": {
     "@aws-sdk/client-s3": "^3.1103.0",
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.62.0",
+    "@playwright/test": "^1.62.1",
     "@types/mailparser": "3.4.6",
     "@types/node": "^26.1.2",
     "@typescript-eslint/eslint-plugin": "^8.25.0",
