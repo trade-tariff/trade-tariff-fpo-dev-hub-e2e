@@ -36,7 +36,18 @@ jobs:
       - run: yarn run typecheck
 
   run-tests:
+    # Login e2e tests share one email inbox + S3 distributed lock in the dev
+    # environment. Two runs racing for that lock exceed the lock wait (60s)
+    # in the middle of a single 50s test timeout, so a run that has to wait
+    # always fails outright rather than just running slower. Serialize CI
+    # runs so only one ever holds the lock at a time (dependabot can push
+    # several branches back-to-back, e.g. its weekly batch).
+    concurrency:
+      group: e2e-dev-login
+      cancel-in-progress: false
     uses: trade-tariff/trade-tariff-tools/.github/workflows/e2e-fpo-tests.yml@main
     with:
       test-environment: development
       ref: ${{ github.ref }}
+    secrets:
+      waf_bypass_token: ${{ secrets.WAF_BYPASS_TOKEN }}
