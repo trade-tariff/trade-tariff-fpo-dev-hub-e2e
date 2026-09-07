@@ -19,7 +19,17 @@ export default defineConfig({
   retries: onCI ? 2 : 0,
   workers: 1,
   reporter: 'html',
-  use: { trace: 'on' },
+  use: {
+    trace: 'on',
+    // Dev/staging WAF rate-limits requests with no UUID-shaped X-Api-Key
+    // header to a handful per minute; a browser login/create/revoke/delete
+    // journey blows through that immediately. WAF_BYPASS_TOKEN carries the
+    // same value as terraform's TF_VAR_WAF_E2E_SECRET_TOKEN, which the WAF's
+    // allow-e2e-tests rule lets straight through.
+    extraHTTPHeaders: process.env.WAF_BYPASS_TOKEN
+      ? { 'X-WAF-Bypass': process.env.WAF_BYPASS_TOKEN }
+      : {},
+  },
   timeout: 50000, // keys take a while to go live
 
   projects: [
