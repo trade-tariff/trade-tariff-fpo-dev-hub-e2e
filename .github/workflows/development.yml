@@ -49,3 +49,5 @@ jobs:
     with:
       test-environment: development
       ref: ${{ github.ref }}
+    secrets:
+      waf_bypass_token: ${{ secrets.WAF_BYPASS_TOKEN }}
