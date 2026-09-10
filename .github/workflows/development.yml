@@ -2,6 +2,13 @@ name: development
 
 on:
   push:
+  # Dependabot pushes/PRs run as the dependabot[bot] actor, and GitHub
+  # withholds all repo/org secrets from push and pull_request runs with
+  # that actor (see https://docs.github.com/en/code-security/dependabot/working-with-dependabot/automating-dependabot-with-github-actions#accessing-secrets).
+  # pull_request_target isn't subject to that restriction, since it runs
+  # the workflow file from the base branch rather than the PR branch, so
+  # run-tests uses it to get secrets back for dependabot PRs specifically.
+  pull_request_target:
   workflow_dispatch:
 
 permissions:
@@ -10,6 +17,10 @@ permissions:
 
 jobs:
   lint:
+    # Covered by the push trigger already; skip the pull_request_target
+    # duplicate (lint needs no secrets, so it isn't affected by the
+    # dependabot secrets restriction in the first place).
+    if: github.event_name != 'pull_request_target'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -42,12 +53,24 @@ jobs:
     # always fails outright rather than just running slower. Serialize CI
     # runs so only one ever holds the lock at a time (dependabot can push
     # several branches back-to-back, e.g. its weekly batch).
+    #
+    # Dependabot pushes get no secrets (see the `on:` block above), so this
+    # job can't pass for them via `push` - skip it there and pick it up via
+    # `pull_request_target` instead, which does get secrets. Everyone else
+    # keeps using `push` as before; skip the pull_request_target duplicate
+    # for non-dependabot PRs, since `push` already covers those.
+    if: |
+      (github.event_name == 'push' && github.actor != 'dependabot[bot]') ||
+      (github.event_name == 'pull_request_target' && github.actor == 'dependabot[bot]') ||
+      github.event_name == 'workflow_dispatch'
     concurrency:
       group: e2e-dev-login
       cancel-in-progress: false
     uses: trade-tariff/trade-tariff-tools/.github/workflows/e2e-fpo-tests.yml@main
     with:
       test-environment: development
-      ref: ${{ github.ref }}
+      # pull_request_target's github.ref points at the base branch, not the
+      # PR - use the PR head SHA so we actually test the dependabot bump.
+      ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.ref }}
     secrets:
       waf_bypass_token: ${{ secrets.WAF_BYPASS_TOKEN }}
