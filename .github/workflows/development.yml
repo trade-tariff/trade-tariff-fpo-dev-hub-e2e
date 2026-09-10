@@ -13,7 +13,6 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   lint:
@@ -63,6 +62,12 @@ jobs:
       (github.event_name == 'push' && github.actor != 'dependabot[bot]') ||
       (github.event_name == 'pull_request_target' && github.actor == 'dependabot[bot]') ||
       github.event_name == 'workflow_dispatch'
+    # Only this job needs to mint an AWS OIDC token (for the e2e testing
+    # role); lint doesn't, so id-token: write lives here rather than at
+    # workflow level.
+    permissions:
+      contents: read
+      id-token: write
     concurrency:
       group: e2e-dev-login
       cancel-in-progress: false
