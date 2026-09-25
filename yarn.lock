@@ -589,13 +589,13 @@
     "@typescript-eslint/types" "8.70.0"
     eslint-visitor-keys "^5.0.0"
 
-"@zone-eu/mailsplit@5.4.15":
-  version "5.4.15"
-  resolved "https://registry.yarnpkg.com/@zone-eu/mailsplit/-/mailsplit-5.4.15.tgz#15d150f6873e654f46b79935947ca73c8ffa8220"
-  integrity sha512-c7ZpxauvF4AEkDJlKDYO7iMUtMuqJMBnDWNff1cyx+d7zaBVR3iFEmXhNHOVoMmVyVF3pTZLsLIJsEFKDldOAA==
+"@zone-eu/mailsplit@5.4.17":
+  version "5.4.17"
+  resolved "https://registry.yarnpkg.com/@zone-eu/mailsplit/-/mailsplit-5.4.17.tgz#a53778592bc73cf7978f7c3cf52b5198570b9d56"
+  integrity sha512-LOMzdrKRVgaghLaezIPdHRhsGpfDiWNQo1RptWc84CRllI4dWLwqX/L4x1iTt1CaeyvyUfMXM/6mjIsEisT3Tg==
   dependencies:
     libbase64 "1.3.0"
-    libmime "5.4.2"
+    libmime "5.4.4"
     libqp "2.1.1"
 
 acorn-jsx@^5.3.2:
@@ -951,10 +951,10 @@ dunder-proto@^1.0.0, dunder-proto@^1.0.1:
     es-errors "^1.3.0"
     gopd "^1.2.0"
 
-encoding-japanese@2.2.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/encoding-japanese/-/encoding-japanese-2.2.0.tgz#0ef2d2351250547f432a2dd155453555c16deb59"
-  integrity sha512-EuJWwlHPZ1LbADuKTClvHtwbaFn4rOD+dRAbWysqEOXRc2Uui0hJInNJrsdH0c+OhJA4nrCBdSkW4DD5YxAo6A==
+encoding-japanese@2.4.0:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/encoding-japanese/-/encoding-japanese-2.4.0.tgz#9d19fd65d76d3d5ad7aeb1772f843674c0c2cc36"
+  integrity sha512-PE0KjlsDy9JSsoU4C2Q8NXb1kC4c+bZRac9ZvHXUE4q1Ht63gScKMdEy9jst9+Fi3M4eDkqzkEhBZvix4blP2A==
 
 enhanced-resolve@^5.17.1:
   version "5.24.2"
@@ -1865,12 +1865,12 @@ libbase64@1.3.0:
   resolved "https://registry.yarnpkg.com/libbase64/-/libbase64-1.3.0.tgz#053314755a05d2e5f08bbfc48d0290e9322f4406"
   integrity sha512-GgOXd0Eo6phYgh0DJtjQ2tO8dc0IVINtZJeARPeiIJqge+HdsWSuaDTe8ztQ7j/cONByDZ3zeB325AHiv5O0dg==
 
-libmime@5.4.2:
-  version "5.4.2"
-  resolved "https://registry.yarnpkg.com/libmime/-/libmime-5.4.2.tgz#66e37709e273865990bfc3e54471de7702989a8e"
-  integrity sha512-+IQnCOdPiufGBkOii+Ze8F7iniyBzOwvWDbn1DyExBpc9pT2B3IEMQi7GUc/PpqhNUh/sr1SG9UXDITQoR0VIA==
+libmime@5.4.4:
+  version "5.4.4"
+  resolved "https://registry.yarnpkg.com/libmime/-/libmime-5.4.4.tgz#89646e47082fb7d2b364f9f4f577ba6d03349bd3"
+  integrity sha512-d3zZ2k8s6iO+8u9Vfkl6HfhD5lSVocGcmOViTz/i0CJcwhJADyubEJ/+TkBhuLDUSIBOiG+D8G5kJKwXwKbXXA==
   dependencies:
-    encoding-japanese "2.2.0"
+    encoding-japanese "2.4.0"
     iconv-lite "0.7.3"
     libbase64 "1.3.0"
     libqp "2.1.1"
@@ -1899,19 +1899,19 @@ lodash.merge@^4.6.2:
   resolved "https://registry.yarnpkg.com/lodash.merge/-/lodash.merge-4.6.2.tgz#558aa53b43b661e1925a0afdfa36a9a1085fe57a"
   integrity sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==
 
-mailparser@^3.9.16:
-  version "3.9.16"
-  resolved "https://registry.yarnpkg.com/mailparser/-/mailparser-3.9.16.tgz#5a762fc71a659f4436ec1e6b20849af35047bc9f"
-  integrity sha512-TvbU4YMEDLPkDIft/oUTjjV5PvoR/mj9gw+zzNP6SHJHxBd9FsRWP+rDt80a1wOJ4dKyNesRrYATZ+n0RKyDtw==
+mailparser@^3.9.28:
+  version "3.9.28"
+  resolved "https://registry.yarnpkg.com/mailparser/-/mailparser-3.9.28.tgz#f379bfe747ab52fe7df5d437c8163e433e0624b1"
+  integrity sha512-O7oCYzWW9YH5lHk/y3Z8R8dFnUq8wqaH146BuU2NDt/3MGjdfMLzGF2Ft7WksTCeq00covNKpwxQabcG3zJFqQ==
   dependencies:
-    "@zone-eu/mailsplit" "5.4.15"
-    encoding-japanese "2.2.0"
+    "@zone-eu/mailsplit" "5.4.17"
+    encoding-japanese "2.4.0"
     he "1.2.0"
     html-to-text "10.0.1"
     iconv-lite "0.7.3"
-    libmime "5.4.2"
+    libmime "5.4.4"
     linkify-it "5.0.2"
-    nodemailer "9.0.5"
+    nodemailer "10.0.10"
     punycode.js "2.3.1"
     tlds "1.261.0"
 
@@ -1979,10 +1979,10 @@ node-exports-info@^1.6.0:
     object.entries "^1.1.9"
     semver "^6.3.1"
 
-nodemailer@9.0.5:
-  version "9.0.5"
-  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-9.0.5.tgz#edf488e2d25b1688614922d7e733f551114099fc"
-  integrity sha512-wvjiKvjczmsN7U/8006JOdXubgBk2XFAbioDMbT+sM7cPs0QrhJTa6KBRX7P5REGGkDcLUz/EarWidb8G8C1jQ==
+nodemailer@10.0.10:
+  version "10.0.10"
+  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-10.0.10.tgz#a5ac2828272903740cb04ce17d1a4468e2e06cb3"
+  integrity sha512-He9XskOFms62SyAKkLu8CcGcYHAo+BSHSsORI8s4PJH8qZgZY4L4lDfvyN0twvmbpyG+eGrxpyBlskj9d9rJ8A==
 
 object-inspect@^1.13.3, object-inspect@^1.13.4:
   version "1.13.4"
