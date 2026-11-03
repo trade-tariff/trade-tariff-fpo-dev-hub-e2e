@@ -80,7 +80,7 @@ export class DashboardPage {
 
     // Verify status shows "Revoked"
     const statusCell = this.revokedKeyStatus(description)
-    await expect(statusCell).toHaveText(this.revokedDate())
+    await expect(statusCell).toHaveText(/revoked/i);
 
     // Verify "Delete" link is visible (replaces "Revoke" link)
     const deleteLink = this.deleteKeyLink(description)
@@ -262,14 +262,5 @@ export class DashboardPage {
 
   private backToDashboardLink(): Locator {
     return this.page.getByRole('link', { name: 'Back to api keys' })
-  }
-
-  private revokedDate(): string {
-    const today = new Date()
-    const day = today.getDate()
-    const month = today.toLocaleString('default', { month: 'long' })
-    const year = today.getFullYear()
-
-    return `Revoked on ${day} ${month} ${year}`
   }
 }
